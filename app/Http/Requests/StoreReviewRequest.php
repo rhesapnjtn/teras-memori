@@ -4,7 +4,6 @@ namespace App\Http\Requests;
 
 use App\Models\Order;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class StoreReviewRequest extends FormRequest
 {
@@ -53,19 +52,41 @@ class StoreReviewRequest extends FormRequest
                 return;
             }
 
-            $order = Order::find($orderId);
+            $order = Order::with('review')->find($orderId);
 
-            if ($order && (int) $order->customer_id !== (int) $customerId) {
+            if (!$order) {
+                return;
+            }
+
+            /*
+             * Pastikan order milik customer.
+             */
+            if ((int) $order->customer_id !== (int) $customerId) {
                 $validator->errors()->add(
                     'order_id',
                     'Order bukan milik customer tersebut.'
                 );
             }
 
-            if ($order && $order->status !== 'completed') {
+            /*
+             * Review hanya dapat diberikan
+             * setelah order selesai.
+             */
+            if ($order->status !== 'completed') {
                 $validator->errors()->add(
                     'order_id',
                     'Review hanya dapat diberikan untuk order yang sudah selesai.'
+                );
+            }
+
+            /*
+             * Satu order hanya boleh memiliki
+             * satu review.
+             */
+            if ($order->review) {
+                $validator->errors()->add(
+                    'order_id',
+                    'Order ini sudah memiliki review.'
                 );
             }
         });

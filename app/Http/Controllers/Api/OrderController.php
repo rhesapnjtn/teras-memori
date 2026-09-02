@@ -8,15 +8,19 @@ use App\Http\Resources\OrderResource;
 use App\Models\Customer;
 use App\Models\Order;
 use App\Models\Service;
+use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class OrderController extends Controller
 {
-    /**
-     * Display a listing of orders.
-     */
+    /*
+    |--------------------------------------------------------------------------
+    | INDEX
+    |--------------------------------------------------------------------------
+    */
+
     public function index(): AnonymousResourceCollection
     {
         $orders = Order::query()
@@ -24,6 +28,8 @@ class OrderController extends Controller
                 'customer',
                 'items.service',
                 'payment',
+                'files',
+                'review',
             ])
             ->latest()
             ->get();
@@ -31,37 +37,44 @@ class OrderController extends Controller
         return OrderResource::collection($orders);
     }
 
-    /**
-     * Store a newly created order.
-     */
+
+    /*
+    |--------------------------------------------------------------------------
+    | STORE
+    |--------------------------------------------------------------------------
+    */
+
     public function store(StoreOrderRequest $request): OrderResource
     {
         $validated = $request->validated();
 
-        $order = DB::transaction(function () use ($validated) {
+        $order = DB::transaction(function () use ($validated, $request) {
 
             /*
             |--------------------------------------------------------------------------
-            | Customer
+            | CUSTOMER
             |--------------------------------------------------------------------------
             */
 
             $customerData = $validated['customer'];
 
             if (!empty($customerData['email'])) {
+
                 $customer = Customer::updateOrCreate(
-                    [
-                        'email' => $customerData['email'],
-                    ],
+                    ['email' => $customerData['email']],
                     $customerData
                 );
+
             } else {
+
                 $customer = Customer::create($customerData);
+
             }
+
 
             /*
             |--------------------------------------------------------------------------
-            | Services
+            | SERVICES
             |--------------------------------------------------------------------------
             */
 
@@ -75,37 +88,37 @@ class OrderController extends Controller
                 ->get()
                 ->keyBy('id');
 
-            /*
-            |--------------------------------------------------------------------------
-            | Pastikan semua service aktif
-            |--------------------------------------------------------------------------
-            */
-
             if ($services->count() !== $serviceIds->count()) {
+
                 abort(
                     422,
                     'One or more selected services are not available.'
                 );
+
             }
+
 
             /*
             |--------------------------------------------------------------------------
-            | Order Number
+            | ORDER NUMBER
             |--------------------------------------------------------------------------
             */
 
             do {
+
                 $orderNumber = 'TM-'
                     . now()->format('YmdHis')
                     . '-'
                     . Str::upper(Str::random(4));
+
             } while (
                 Order::where('order_number', $orderNumber)->exists()
             );
 
+
             /*
             |--------------------------------------------------------------------------
-            | Create Order
+            | CREATE ORDER
             |--------------------------------------------------------------------------
             */
 
@@ -117,9 +130,10 @@ class OrderController extends Controller
                 'notes' => $validated['notes'] ?? null,
             ]);
 
+
             /*
             |--------------------------------------------------------------------------
-            | Order Items
+            | ORDER ITEMS
             |--------------------------------------------------------------------------
             */
 
@@ -143,9 +157,10 @@ class OrderController extends Controller
                 $total += $subtotal;
             }
 
+
             /*
             |--------------------------------------------------------------------------
-            | Update Total
+            | UPDATE TOTAL
             |--------------------------------------------------------------------------
             */
 
@@ -153,9 +168,10 @@ class OrderController extends Controller
                 'total_amount' => $total,
             ]);
 
+
             /*
             |--------------------------------------------------------------------------
-            | Create Pending Payment
+            | PAYMENT
             |--------------------------------------------------------------------------
             */
 
@@ -165,12 +181,38 @@ class OrderController extends Controller
                 'status' => 'pending',
             ]);
 
+
+            /*
+            |--------------------------------------------------------------------------
+            | UPLOAD FILES
+            |--------------------------------------------------------------------------
+            */
+
+            if ($request->hasFile('files')) {
+
+                foreach ($request->file('files') as $file) {
+
+                    $path = $file->store(
+                        'orders',
+                        'public'
+                    );
+
+                    $order->files()->create([
+                        'file_name' => $file->getClientOriginalName(),
+                        'file_path' => $path,
+                        'file_type' => $file->getMimeType(),
+                        'file_size' => $file->getSize(),
+                    ]);
+                }
+            }
+
             return $order;
         });
 
+
         /*
         |--------------------------------------------------------------------------
-        | Load Relationships
+        | LOAD RELATIONSHIPS
         |--------------------------------------------------------------------------
         */
 
@@ -178,23 +220,116 @@ class OrderController extends Controller
             'customer',
             'items.service',
             'payment',
+            'files',
+            'review',
         ]);
 
         return new OrderResource($order);
     }
 
-    /**
-     * Display the specified order.
-     */
+
+    /*
+    |--------------------------------------------------------------------------
+    | TRACK ORDER
+    |--------------------------------------------------------------------------
+    |
+    | Customer mengecek order menggunakan:
+    |
+    | - Order Number
+    | - Email
+    |
+    | Kedua data harus cocok.
+    |
+    */
+
+    public function track(Request $request): OrderResource
+    {
+        $validated = $request->validate([
+            'order_number' => [
+                'required',
+                'string',
+                'max:100',
+            ],
+
+            'email' => [
+                'required',
+                'email',
+                'max:255',
+            ],
+        ]);
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | FIND ORDER
+        |--------------------------------------------------------------------------
+        */
+
+        $order = Order::query()
+            ->with([
+                'customer',
+                'items.service',
+                'payment',
+                'files',
+                'review',
+            ])
+            ->where(
+                'order_number',
+                trim($validated['order_number'])
+            )
+            ->whereHas('customer', function ($query) use ($validated) {
+
+                $query->where(
+                    'email',
+                    strtolower(trim($validated['email']))
+                );
+
+            })
+            ->first();
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | ORDER NOT FOUND
+        |--------------------------------------------------------------------------
+        */
+
+        if (!$order) {
+
+            abort(
+                404,
+                'We could not find an order with those details.'
+            );
+
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | RETURN ORDER
+        |--------------------------------------------------------------------------
+        */
+
+        return new OrderResource($order);
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | SHOW
+    |--------------------------------------------------------------------------
+    */
+
     public function show(Order $order): OrderResource
     {
         $order->load([
             'customer',
             'items.service',
             'payment',
+            'files',
+            'review',
         ]);
 
         return new OrderResource($order);
     }
 }
-

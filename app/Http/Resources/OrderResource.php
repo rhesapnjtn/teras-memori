@@ -28,16 +28,43 @@ class OrderResource extends JsonResource
                 $this->whenLoaded('items')
             ),
 
-            'payment' => $this->whenLoaded('payment', function () {
-                return [
-                    'id' => $this->payment->id,
-                    'amount' => $this->payment->amount,
-                    'method' => $this->payment->method,
-                    'status' => $this->payment->status,
-                    'transaction_id' => $this->payment->transaction_id,
-                    'paid_at' => $this->payment->paid_at,
-                ];
-            }),
+            'payment' => $this->whenLoaded(
+                'payment',
+                function () {
+                    return [
+                        'id' => $this->payment->id,
+                        'amount' => $this->payment->amount,
+                        'method' => $this->payment->method,
+                        'status' => $this->payment->status,
+                        'transaction_id' => $this->payment->transaction_id,
+                        'paid_at' => $this->payment->paid_at,
+                    ];
+                }
+            ),
+
+            'files' => $this->whenLoaded(
+                'files',
+                function () {
+                    return $this->files->map(
+                        function ($file) {
+                            return [
+                                'id' => $file->id,
+                                'file_name' => $file->file_name,
+                                'file_path' => $file->file_path,
+
+                                // URL file customer
+                                'file_url' => asset(
+                                    'storage/' . $file->file_path
+                                ),
+
+                                'file_type' => $file->file_type,
+                                'file_size' => $file->file_size,
+                                'created_at' => $file->created_at,
+                            ];
+                        }
+                    );
+                }
+            ),
 
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,

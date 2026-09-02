@@ -64,6 +64,11 @@ const routes = [
                 component: () =>
                     import('../pages/public/OrderSuccess.vue'),
             },
+            {
+                path: 'track-order',
+                name: 'track-order',
+                component: () => import('../pages/public/TrackOrder.vue'),
+},
         ],
     },
 

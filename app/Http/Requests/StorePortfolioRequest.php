@@ -40,8 +40,9 @@ class StorePortfolioRequest extends FormRequest
 
             'image' => [
                 'nullable',
-                'string',
-                'max:255',
+                'image',
+                'mimes:jpg,jpeg,png,webp',
+                'max:5120',
             ],
 
             'is_published' => [

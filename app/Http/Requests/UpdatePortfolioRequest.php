@@ -14,7 +14,7 @@ class UpdatePortfolioRequest extends FormRequest
 
     public function rules(): array
     {
-        $portfolioId = $this->route('portfolio')->id;
+        $portfolio = $this->route('portfolio');
 
         return [
             'title' => [
@@ -29,7 +29,8 @@ class UpdatePortfolioRequest extends FormRequest
                 'required',
                 'string',
                 'max:255',
-                Rule::unique('portfolios', 'slug')->ignore($portfolioId),
+                Rule::unique('portfolios', 'slug')
+                    ->ignore($portfolio->id),
             ],
 
             'description' => [
@@ -45,8 +46,9 @@ class UpdatePortfolioRequest extends FormRequest
 
             'image' => [
                 'nullable',
-                'string',
-                'max:255',
+                'image',
+                'mimes:jpg,jpeg,png,webp',
+                'max:5120',
             ],
 
             'is_published' => [

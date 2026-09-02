@@ -1,13 +1,20 @@
-```vue
 <script setup>
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import api from '../../services/api'
 
 const portfolios = ref([])
 const loading = ref(true)
 const errorMessage = ref('')
-const activeCategory = ref('All')
+
+const selectedCategory = ref('All')
 const selectedPortfolio = ref(null)
+const showDetail = ref(false)
+
+/*
+|--------------------------------------------------------------------------
+| Fetch Public Portfolios
+|--------------------------------------------------------------------------
+*/
 
 const fetchPortfolios = async () => {
     loading.value = true
@@ -16,16 +23,23 @@ const fetchPortfolios = async () => {
     try {
         const response = await api.get('/portfolios')
 
-        portfolios.value = response.data.data || []
+        portfolios.value = response.data?.data || []
     } catch (error) {
-        console.error('Failed to load portfolios:', error)
+        console.error(error)
 
         errorMessage.value =
-            'Unable to load our portfolio right now. Please try again.'
+            error.response?.data?.message ||
+            'Unable to load our portfolio.'
     } finally {
         loading.value = false
     }
 }
+
+/*
+|--------------------------------------------------------------------------
+| Categories
+|--------------------------------------------------------------------------
+*/
 
 const categories = computed(() => {
     const values = portfolios.value
@@ -35,395 +49,456 @@ const categories = computed(() => {
     return ['All', ...new Set(values)]
 })
 
+/*
+|--------------------------------------------------------------------------
+| Filtered Portfolios
+|--------------------------------------------------------------------------
+*/
+
 const filteredPortfolios = computed(() => {
-    if (activeCategory.value === 'All') {
+    if (selectedCategory.value === 'All') {
         return portfolios.value
     }
 
     return portfolios.value.filter(
-        (portfolio) => portfolio.category === activeCategory.value
+        (portfolio) =>
+            portfolio.category === selectedCategory.value
     )
 })
 
-const openPortfolio = (portfolio) => {
+/*
+|--------------------------------------------------------------------------
+| Image URL
+|--------------------------------------------------------------------------
+*/
+
+const imageUrl = (portfolio) => {
+    if (!portfolio?.image) {
+        return null
+    }
+
+    if (
+        portfolio.image.startsWith('http://') ||
+        portfolio.image.startsWith('https://') ||
+        portfolio.image.startsWith('/')
+    ) {
+        return portfolio.image
+    }
+
+    return `/storage/${portfolio.image}`
+}
+
+/*
+|--------------------------------------------------------------------------
+| Open Detail
+|--------------------------------------------------------------------------
+*/
+
+const openDetail = async (portfolio) => {
     selectedPortfolio.value = portfolio
-    document.body.style.overflow = 'hidden'
-}
+    showDetail.value = true
 
-const closePortfolio = () => {
-    selectedPortfolio.value = null
-    document.body.style.overflow = ''
-}
+    try {
+        const response = await api.get(
+            `/portfolios/${portfolio.id}`
+        )
 
-const handleKeydown = (event) => {
-    if (event.key === 'Escape' && selectedPortfolio.value) {
-        closePortfolio()
+        selectedPortfolio.value =
+            response.data?.data || portfolio
+    } catch (error) {
+        console.error(error)
     }
 }
 
-onMounted(() => {
-    fetchPortfolios()
-    window.addEventListener('keydown', handleKeydown)
-})
+/*
+|--------------------------------------------------------------------------
+| Close Detail
+|--------------------------------------------------------------------------
+*/
 
-onUnmounted(() => {
-    window.removeEventListener('keydown', handleKeydown)
-    document.body.style.overflow = ''
-})
+const closeDetail = () => {
+    showDetail.value = false
+    selectedPortfolio.value = null
+}
+
+/*
+|--------------------------------------------------------------------------
+| Mounted
+|--------------------------------------------------------------------------
+*/
+
+onMounted(fetchPortfolios)
 </script>
 
 <template>
-    <div class="min-h-screen overflow-hidden bg-[#FFF8FA] text-[#191919]">
+    <main class="bg-[#FFF8FA] text-[#191919]">
 
-        <!-- =====================================================
-             HERO
-        ====================================================== -->
+        <!-- ========================================================= -->
+        <!-- HERO -->
+        <!-- ========================================================= -->
+
         <section
-            class="relative overflow-hidden border-b border-[#191919]/10"
+            class="relative overflow-hidden border-b border-[#191919]/10 px-6 pb-20 pt-24 md:px-10 md:pb-28 md:pt-32"
         >
+            <!-- Background Circle -->
 
-            <!-- Editorial grid -->
             <div
-                class="pointer-events-none absolute inset-0 opacity-[0.035]"
-                style="
-                    background-image:
-                        linear-gradient(rgba(25,25,25,.5) 1px, transparent 1px),
-                        linear-gradient(90deg, rgba(25,25,25,.5) 1px, transparent 1px);
-                    background-size: 80px 80px;
-                "
-            ></div>
-
-            <!-- Decorative circles -->
-            <div
-                class="pointer-events-none absolute -left-32 top-10 h-[500px] w-[500px] rounded-full border border-[#E85D75]/10"
+                class="pointer-events-none absolute -right-32 -top-32 h-[420px] w-[420px] rounded-full border border-[#E85D75]/10"
             ></div>
 
             <div
-                class="pointer-events-none absolute -left-10 top-40 h-[300px] w-[300px] rounded-full bg-[#F4A6B8]/15 blur-[100px]"
+                class="pointer-events-none absolute -right-20 -top-20 h-[260px] w-[260px] rounded-full border border-[#E85D75]/10"
             ></div>
 
-            <div
-                class="pointer-events-none absolute -right-32 -top-32 h-[450px] w-[450px] rounded-full border border-[#191919]/[0.04]"
-            ></div>
+            <div class="mx-auto max-w-7xl">
 
-
-            <div
-                class="relative mx-auto max-w-[1600px] px-6 pb-24 pt-20 sm:px-10 md:pb-32 md:pt-28 lg:px-16"
-            >
-
-                <!-- Label -->
-                <div class="mb-10 flex items-center gap-4">
-
-                    <span
-                        class="h-px w-12 bg-[#E85D75]"
-                    ></span>
-
-                    <span
-                        class="text-[10px] uppercase tracking-[0.4em] text-[#191919]/40"
-                    >
-                        03 — Selected Work
-                    </span>
-
-                </div>
-
-
-                <!-- Heading -->
                 <div
-                    class="grid gap-14 lg:grid-cols-[1fr_250px] lg:items-end"
+                    class="grid gap-12 lg:grid-cols-[1.3fr_0.7fr] lg:items-end"
                 >
 
+                    <!-- LEFT -->
+
                     <div>
+                        <p
+                            class="text-[9px] font-semibold uppercase tracking-[0.4em] text-[#E85D75]"
+                        >
+                            Selected Work
+                        </p>
 
                         <h1
-                            class="max-w-6xl text-[17vw] font-medium leading-[0.75] tracking-[-0.085em] sm:text-[13vw] lg:text-[10vw]"
+                            class="mt-6 max-w-4xl text-5xl font-medium leading-[0.9] tracking-[-0.07em] sm:text-7xl lg:text-8xl"
                         >
-                            OUR
-                            <span class="text-[#191919]/15">
-                                WORK.
-                            </span>
-                        </h1>
+                            STORIES
+                            <br />
 
+                            <span class="text-[#E85D75]">
+                                WORTH
+                            </span>
+
+                            <br />
+
+                            REMEMBERING<span
+                                class="text-[#E85D75]"
+                            >.</span>
+                        </h1>
                     </div>
 
+                    <!-- RIGHT -->
 
-                    <!-- Artwork number -->
-                    <div class="hidden lg:block">
+                    <div class="lg:pb-2">
 
-                        <div class="relative mx-auto h-36 w-36">
+                        <div
+                            class="border-l border-[#191919]/15 pl-6"
+                        >
+                            <p
+                                class="max-w-sm text-sm leading-7 text-[#191919]/45"
+                            >
+                                A collection of photographs
+                                transformed with care,
+                                precision, and a little
+                                creative direction.
+                            </p>
 
                             <div
-                                class="absolute inset-0 rounded-full border border-[#191919]/10"
-                            ></div>
-
-                            <div
-                                class="absolute inset-4 rounded-full border border-[#E85D75]/20"
-                            ></div>
-
-                            <div
-                                class="absolute inset-0 flex items-center justify-center"
+                                class="mt-8 flex items-center gap-5"
                             >
                                 <span
-                                    class="text-[9px] uppercase tracking-[0.35em] text-[#191919]/35"
+                                    class="h-px w-10 bg-[#E85D75]"
+                                ></span>
+
+                                <span
+                                    class="text-[8px] font-semibold uppercase tracking-[0.3em] text-[#191919]/35"
                                 >
-                                    TM / 03
+                                    Teras Memori Studio
                                 </span>
                             </div>
-
                         </div>
 
                     </div>
 
                 </div>
 
+            </div>
+        </section>
 
-                <!-- Intro -->
+        <!-- ========================================================= -->
+        <!-- CATEGORY FILTER -->
+        <!-- ========================================================= -->
+
+        <section
+            class="sticky top-0 z-20 border-b border-[#191919]/10 bg-[#FFF8FA]/90 px-6 py-5 backdrop-blur-xl md:px-10"
+        >
+            <div
+                class="mx-auto flex max-w-7xl flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
+            >
+
                 <div
-                    class="mt-16 grid gap-8 border-t border-[#191919]/10 pt-8 md:grid-cols-[1fr_300px]"
+                    class="flex flex-wrap items-center gap-2"
                 >
-
-                    <p
-                        class="max-w-2xl text-base leading-7 text-[#191919]/55 md:text-lg"
+                    <button
+                        v-for="category in categories"
+                        :key="category"
+                        type="button"
+                        class="px-4 py-2 text-[8px] font-semibold uppercase tracking-[0.2em] transition"
+                        :class="
+                            selectedCategory === category
+                                ? 'bg-[#191919] text-white'
+                                : 'border border-[#191919]/10 text-[#191919]/45 hover:border-[#E85D75]/30 hover:text-[#E85D75]'
+                        "
+                        @click="
+                            selectedCategory = category
+                        "
                     >
-                        A collection of photographs we've edited,
-                        restored and refined. Every image has its own
-                        story. Our work exists to make that story
-                        worth remembering.
-                    </p>
-
-                    <div
-                        class="text-xs leading-6 text-[#191919]/30 md:text-right"
-                    >
-                        Selected projects
-                        <br />
-                        Teras Memori Studio
-                    </div>
-
+                        {{ category }}
+                    </button>
                 </div>
 
-            </div>
-
-        </section>
-
-
-        <!-- =====================================================
-             FILTER
-        ====================================================== -->
-        <section
-            class="border-b border-[#191919]/10"
-        >
-
-            <div
-                class="mx-auto flex max-w-[1600px] flex-wrap items-center gap-2 px-6 py-6 sm:px-10 lg:px-16"
-            >
-
-                <button
-                    v-for="category in categories"
-                    :key="category"
-                    type="button"
-                    @click="activeCategory = category"
-                    class="rounded-full border px-5 py-2.5 text-[10px] uppercase tracking-[0.25em] transition duration-300"
-                    :class="
-                        activeCategory === category
-                            ? 'border-[#191919] bg-[#191919] text-white'
-                            : 'border-[#191919]/10 text-[#191919]/40 hover:border-[#E85D75]/50 hover:text-[#E85D75]'
-                    "
+                <p
+                    class="text-[8px] uppercase tracking-[0.25em] text-[#191919]/25"
                 >
-                    {{ category }}
-                </button>
+                    {{ filteredPortfolios.length }}
+                    Selected Works
+                </p>
 
             </div>
-
         </section>
 
+        <!-- ========================================================= -->
+        <!-- PORTFOLIO -->
+        <!-- ========================================================= -->
 
-        <!-- =====================================================
-             PORTFOLIO GRID
-        ====================================================== -->
-        <section>
+        <section
+            class="px-6 py-20 md:px-10 md:py-28"
+        >
+            <div class="mx-auto max-w-7xl">
 
-            <div
-                class="mx-auto max-w-[1600px] px-6 py-20 sm:px-10 md:py-28 lg:px-16"
-            >
+                <!-- LOADING -->
 
-                <!-- Loading -->
                 <div
                     v-if="loading"
-                    class="grid gap-x-6 gap-y-16 md:grid-cols-2"
+                    class="grid gap-6 md:grid-cols-2 lg:grid-cols-3"
                 >
-
                     <div
-                        v-for="item in 4"
-                        :key="item"
+                        v-for="index in 6"
+                        :key="index"
                         class="animate-pulse"
                     >
-
                         <div
-                            class="aspect-[4/5] bg-[#191919]/[0.04]"
+                            class="aspect-[4/5] bg-[#F4F0F1]"
                         ></div>
 
-                        <div
-                            class="mt-5 h-5 w-2/3 bg-[#191919]/[0.05]"
-                        ></div>
+                        <div class="mt-5">
+                            <div
+                                class="h-2 w-20 bg-[#191919]/5"
+                            ></div>
 
-                        <div
-                            class="mt-3 h-3 w-1/3 bg-[#191919]/[0.04]"
-                        ></div>
-
+                            <div
+                                class="mt-3 h-5 w-2/3 bg-[#191919]/5"
+                            ></div>
+                        </div>
                     </div>
-
                 </div>
 
+                <!-- ERROR -->
 
-                <!-- Error -->
                 <div
                     v-else-if="errorMessage"
-                    class="border-y border-[#191919]/10 py-20 text-center"
+                    class="border border-red-200 bg-red-50 px-6 py-10 text-center"
                 >
-
-                    <p class="text-sm text-[#191919]/45">
+                    <p
+                        class="text-sm text-red-500"
+                    >
                         {{ errorMessage }}
                     </p>
 
                     <button
                         type="button"
+                        class="mt-5 border border-red-300 px-5 py-3 text-[8px] font-semibold uppercase tracking-[0.2em] text-red-500 transition hover:bg-red-500 hover:text-white"
                         @click="fetchPortfolios"
-                        class="mt-6 rounded-full border border-[#191919]/15 px-6 py-3 text-xs uppercase tracking-[0.2em] transition duration-300 hover:border-[#191919]/40 hover:bg-[#191919]/5"
                     >
                         Try again
                     </button>
-
                 </div>
 
+                <!-- EMPTY -->
 
-                <!-- Empty -->
                 <div
-                    v-else-if="filteredPortfolios.length === 0"
-                    class="border-y border-[#191919]/10 py-20 text-center"
+                    v-else-if="!filteredPortfolios.length"
+                    class="flex min-h-[420px] items-center justify-center border border-[#191919]/10 bg-white px-6 text-center"
                 >
+                    <div>
 
-                    <p class="text-sm text-[#191919]/40">
-                        No projects found in this category.
-                    </p>
+                        <div
+                            class="mx-auto flex h-16 w-16 items-center justify-center rounded-full border border-[#E85D75]/20 text-xl text-[#E85D75]"
+                        >
+                            TM
+                        </div>
 
+                        <p
+                            class="mt-7 text-[9px] font-semibold uppercase tracking-[0.3em] text-[#191919]/30"
+                        >
+                            No selected work
+                        </p>
+
+                        <h2
+                            class="mt-3 text-2xl font-medium tracking-[-0.04em]"
+                        >
+                            Nothing here yet<span
+                                class="text-[#E85D75]"
+                            >.</span>
+                        </h2>
+
+                        <p
+                            class="mx-auto mt-3 max-w-sm text-sm leading-6 text-[#191919]/35"
+                        >
+                            New work will appear here as
+                            soon as it is published by the
+                            studio.
+                        </p>
+
+                    </div>
                 </div>
 
+                <!-- GRID -->
 
-                <!-- Portfolio -->
                 <div
                     v-else
-                    class="grid gap-x-6 gap-y-20 md:grid-cols-2"
+                    class="grid gap-x-6 gap-y-16 md:grid-cols-2 lg:grid-cols-3"
                 >
 
                     <article
                         v-for="(portfolio, index) in filteredPortfolios"
                         :key="portfolio.id"
                         class="group cursor-pointer"
-                        @click="openPortfolio(portfolio)"
+                        @click="openDetail(portfolio)"
                     >
 
-                        <!-- Image -->
+                        <!-- IMAGE -->
+
                         <div
-                            class="relative overflow-hidden bg-[#F4F0F1]"
-                            :class="
-                                index % 3 === 1
-                                    ? 'aspect-[4/5] md:mt-24'
-                                    : 'aspect-[4/5]'
-                            "
+                            class="relative aspect-[4/5] overflow-hidden bg-[#F4F0F1]"
                         >
 
-                            <!-- Number -->
-                            <div
-                                class="absolute left-5 top-5 z-10 flex h-9 w-9 items-center justify-center rounded-full border border-white/40 bg-[#191919]/20 backdrop-blur-sm"
-                            >
-                                <span
-                                    class="text-[9px] text-white/80"
-                                >
-                                    {{ String(index + 1).padStart(2, '0') }}
-                                </span>
-                            </div>
-
-
-                            <!-- Image -->
                             <img
-                                v-if="portfolio.image"
-                                :src="portfolio.image"
-                                :alt="portfolio.title"
+                                v-if="imageUrl(portfolio)"
+                                :src="imageUrl(portfolio)"
+                                :alt="
+                                    portfolio.title ||
+                                    'Teras Memori Portfolio'
+                                "
                                 class="h-full w-full object-cover transition duration-700 ease-out group-hover:scale-105"
-                                loading="lazy"
                             />
 
-
-                            <!-- Fallback -->
                             <div
                                 v-else
-                                class="flex h-full w-full items-center justify-center bg-[#F4F0F1]"
+                                class="flex h-full w-full items-center justify-center"
                             >
-
                                 <div class="text-center">
 
-                                    <span
-                                        class="text-[10px] uppercase tracking-[0.3em] text-[#191919]/20"
-                                    >
-                                        Teras Memori
-                                    </span>
-
                                     <div
-                                        class="mx-auto mt-4 h-px w-10 bg-[#E85D75]"
-                                    ></div>
+                                        class="mx-auto flex h-14 w-14 items-center justify-center rounded-full border border-[#191919]/10 text-sm text-[#E85D75]"
+                                    >
+                                        TM
+                                    </div>
+
+                                    <p
+                                        class="mt-4 text-[8px] uppercase tracking-[0.25em] text-[#191919]/25"
+                                    >
+                                        No Image
+                                    </p>
 
                                 </div>
-
                             </div>
 
-
                             <!-- Overlay -->
+
                             <div
-                                class="absolute inset-0 bg-[#191919]/0 transition duration-500 group-hover:bg-[#191919]/20"
+                                class="absolute inset-0 bg-[#191919]/0 transition duration-500 group-hover:bg-[#191919]/10"
                             ></div>
 
+                            <!-- Number -->
+
+                            <div
+                                class="absolute left-5 top-5"
+                            >
+                                <span
+                                    class="flex h-9 w-9 items-center justify-center rounded-full bg-[#FFF8FA]/90 text-[8px] font-semibold backdrop-blur-sm"
+                                >
+                                    {{
+                                        String(index + 1).padStart(
+                                            2,
+                                            '0'
+                                        )
+                                    }}
+                                </span>
+                            </div>
 
                             <!-- View -->
+
                             <div
-                                class="absolute bottom-5 right-5 flex h-14 w-14 translate-y-3 items-center justify-center rounded-full bg-white text-[#191919] opacity-0 shadow-lg transition duration-500 group-hover:translate-y-0 group-hover:opacity-100"
+                                class="absolute bottom-5 right-5 flex h-11 w-11 translate-y-3 items-center justify-center rounded-full bg-white text-sm opacity-0 shadow-lg transition duration-500 group-hover:translate-y-0 group-hover:opacity-100"
                             >
-                                <span class="text-lg">
-                                    ↗
-                                </span>
+                                ↗
                             </div>
 
                         </div>
 
+                        <!-- CONTENT -->
 
-                        <!-- Info -->
-                        <div
-                            class="mt-5 flex items-start justify-between gap-5"
-                        >
+                        <div class="mt-5">
 
-                            <div>
-
-                                <h2
-                                    class="text-xl font-medium tracking-[-0.025em] text-[#191919]/80 transition duration-300 group-hover:text-[#191919] sm:text-2xl"
-                                >
-                                    {{ portfolio.title }}
-                                </h2>
-
+                            <div
+                                class="flex items-center justify-between gap-4"
+                            >
 
                                 <p
-                                    v-if="portfolio.description"
-                                    class="mt-2 max-w-md text-sm leading-6 text-[#191919]/35"
+                                    class="text-[8px] font-semibold uppercase tracking-[0.3em] text-[#E85D75]"
                                 >
-                                    {{ portfolio.description }}
+                                    {{
+                                        portfolio.category ||
+                                        'Selected Work'
+                                    }}
                                 </p>
+
+                                <span
+                                    class="text-[8px] uppercase tracking-[0.2em] text-[#191919]/20"
+                                >
+                                    TM
+                                </span>
 
                             </div>
 
-
-                            <span
-                                v-if="portfolio.category"
-                                class="shrink-0 pt-1 text-[9px] uppercase tracking-[0.25em] text-[#191919]/25 transition-colors duration-300 group-hover:text-[#E85D75]"
+                            <h2
+                                class="mt-3 text-2xl font-medium tracking-[-0.05em] transition group-hover:text-[#E85D75]"
                             >
-                                {{ portfolio.category }}
-                            </span>
+                                {{
+                                    portfolio.title ||
+                                    'Untitled Work'
+                                }}
+                            </h2>
+
+                            <p
+                                v-if="portfolio.description"
+                                class="mt-3 line-clamp-2 text-sm leading-6 text-[#191919]/40"
+                            >
+                                {{
+                                    portfolio.description
+                                }}
+                            </p>
+
+                            <div
+                                class="mt-5 flex items-center gap-3"
+                            >
+                                <span
+                                    class="h-px w-7 bg-[#191919]/15 transition-all duration-500 group-hover:w-12 group-hover:bg-[#E85D75]"
+                                ></span>
+
+                                <span
+                                    class="text-[8px] font-semibold uppercase tracking-[0.22em] text-[#191919]/30"
+                                >
+                                    View project
+                                </span>
+                            </div>
 
                         </div>
 
@@ -432,333 +507,226 @@ onUnmounted(() => {
                 </div>
 
             </div>
-
         </section>
 
+        <!-- ========================================================= -->
+        <!-- CLOSING -->
+        <!-- ========================================================= -->
 
-        <!-- =====================================================
-             STATEMENT
-        ====================================================== -->
         <section
-            class="border-t border-[#191919]/10"
+            class="border-t border-[#191919]/10 bg-[#191919] px-6 py-24 text-white md:px-10 md:py-32"
         >
-
-            <div
-                class="mx-auto max-w-[1600px] px-6 py-24 sm:px-10 md:py-36 lg:px-16"
-            >
+            <div class="mx-auto max-w-7xl">
 
                 <div
-                    class="grid gap-14 lg:grid-cols-[0.4fr_1fr]"
+                    class="grid gap-10 lg:grid-cols-[1fr_auto] lg:items-end"
                 >
 
                     <div>
-
-                        <span
-                            class="text-[10px] uppercase tracking-[0.35em] text-[#191919]/30"
-                        >
-                            Our philosophy
-                        </span>
-
-                        <div
-                            class="mt-8 hidden h-px w-20 bg-[#E85D75] lg:block"
-                        ></div>
-
-                    </div>
-
-
-                    <div>
-
                         <p
-                            class="max-w-5xl text-4xl font-medium leading-[1.03] tracking-[-0.055em] text-[#191919]/80 sm:text-5xl md:text-6xl lg:text-7xl"
+                            class="text-[9px] font-semibold uppercase tracking-[0.35em] text-[#F4A6B8]"
                         >
-                            Good editing should never make a photograph
-                            feel
-                            <span class="text-[#191919]/20">
-                                edited.
-                            </span>
+                            Your story
                         </p>
-
-
-                        <p
-                            class="mt-8 max-w-2xl text-sm leading-7 text-[#191919]/40 md:text-base"
-                        >
-                            We believe the best work is often invisible.
-                            Color, light, texture and detail should work
-                            together naturally — keeping the photograph's
-                            original character intact.
-                        </p>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-        </section>
-
-
-        <!-- =====================================================
-             CREATIVE STATEMENT
-        ====================================================== -->
-        <section
-            class="border-t border-[#191919]/10"
-        >
-
-            <div
-                class="mx-auto max-w-[1600px] px-6 py-24 sm:px-10 md:py-36 lg:px-16"
-            >
-
-                <div
-                    class="relative overflow-hidden rounded-[2rem] bg-[#191919]"
-                >
-
-                    <!-- Decorative pink shape -->
-                    <div
-                        class="pointer-events-none absolute -right-24 -top-24 h-96 w-96 rounded-full border border-[#E85D75]/30"
-                    ></div>
-
-                    <div
-                        class="pointer-events-none absolute -right-10 top-10 h-64 w-64 rounded-full border border-white/10"
-                    ></div>
-
-                    <div
-                        class="pointer-events-none absolute -bottom-24 -left-24 h-80 w-80 rounded-full bg-[#E85D75]/10 blur-[90px]"
-                    ></div>
-
-
-                    <div
-                        class="relative grid gap-12 px-6 py-20 sm:px-10 md:px-16 md:py-28 lg:grid-cols-[0.3fr_1fr] lg:items-end"
-                    >
-
-                        <div>
-
-                            <span
-                                class="text-[10px] uppercase tracking-[0.35em] text-white/30"
-                            >
-                                03 / The archive
-                            </span>
-
-                            <p
-                                class="mt-5 text-xs leading-6 text-white/25"
-                            >
-                                Every project becomes part of
-                                the visual language of Teras Memori.
-                            </p>
-
-                        </div>
-
-
-                        <div>
-
-                            <p
-                                class="text-4xl font-medium leading-[0.95] tracking-[-0.055em] text-white sm:text-5xl md:text-7xl"
-                            >
-                                Images are more than
-                                <span class="text-white/25">
-                                    pictures.
-                                </span>
-
-                                <br />
-
-                                They are pieces of
-                                <span class="text-[#E85D75]">
-                                    memory.
-                                </span>
-                            </p>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-        </section>
-
-
-        <!-- =====================================================
-             CTA
-        ====================================================== -->
-        <section
-            class="border-t border-[#191919]/10"
-        >
-
-            <div
-                class="mx-auto max-w-[1600px] px-6 py-24 sm:px-10 md:py-36 lg:px-16"
-            >
-
-                <div
-                    class="group relative overflow-hidden rounded-[2rem] bg-[#E85D75]"
-                >
-
-                    <!-- Decorative circles -->
-                    <div
-                        class="pointer-events-none absolute -right-24 -top-24 h-96 w-96 rounded-full border border-white/20 transition-transform duration-1000 group-hover:scale-110"
-                    ></div>
-
-                    <div
-                        class="pointer-events-none absolute -right-8 top-8 h-60 w-60 rounded-full border border-white/15 transition-transform duration-1000 group-hover:scale-125"
-                    ></div>
-
-                    <div
-                        class="pointer-events-none absolute -bottom-20 -left-20 h-60 w-60 rounded-full bg-white/10 blur-[70px]"
-                    ></div>
-
-
-                    <div
-                        class="relative px-6 py-24 text-center text-white sm:px-10 md:py-32"
-                    >
-
-                        <span
-                            class="text-[10px] uppercase tracking-[0.4em] text-white/60"
-                        >
-                            Have a project?
-                        </span>
-
 
                         <h2
-                            class="mx-auto mt-6 max-w-5xl text-5xl font-medium leading-[0.88] tracking-[-0.065em] sm:text-6xl md:text-8xl"
+                            class="mt-6 max-w-4xl text-4xl font-medium leading-[0.95] tracking-[-0.06em] sm:text-6xl"
                         >
-                            Let's create something
-                            <span class="text-white/45">
-                                worth remembering.
+                            HAVE A PHOTO
+                            <br />
+                            WORTH
+                            <span class="text-[#F4A6B8]">
+                                REMEMBERING?
                             </span>
                         </h2>
-
-
-                        <p
-                            class="mx-auto mt-8 max-w-md text-sm leading-6 text-white/65"
-                        >
-                            Have a photograph in mind?
-                            Tell us what you need and let's
-                            make it meaningful.
-                        </p>
-
-
-                        <RouterLink
-                            :to="{ name: 'order' }"
-                            class="group/button mt-10 inline-flex items-center gap-6 rounded-full bg-white px-8 py-5 text-xs font-semibold uppercase tracking-[0.2em] text-[#191919] transition duration-500 hover:scale-105"
-                        >
-
-                            Start a project
-
-                            <span
-                                class="transition-transform duration-500 group-hover/button:translate-x-2"
-                            >
-                                →
-                            </span>
-
-                        </RouterLink>
-
                     </div>
+
+                    <RouterLink
+                        to="/order"
+                        class="inline-flex items-center justify-center gap-4 border border-white/20 px-7 py-4 text-[8px] font-semibold uppercase tracking-[0.25em] transition hover:border-[#F4A6B8] hover:bg-[#F4A6B8] hover:text-[#191919]"
+                    >
+                        Start a project
+
+                        <span class="text-base">
+                            →
+                        </span>
+                    </RouterLink>
 
                 </div>
 
             </div>
-
         </section>
 
+        <!-- ========================================================= -->
+        <!-- DETAIL MODAL -->
+        <!-- ========================================================= -->
 
-        <!-- =====================================================
-             PORTFOLIO MODAL
-        ====================================================== -->
-        <Transition name="modal">
+        <Transition name="fade">
 
             <div
-                v-if="selectedPortfolio"
-                class="fixed inset-0 z-[100] overflow-y-auto bg-[#191919]/90 px-4 py-6 backdrop-blur-md sm:px-8 sm:py-10"
-                @click.self="closePortfolio"
+                v-if="
+                    showDetail &&
+                    selectedPortfolio
+                "
+                class="fixed inset-0 z-50 flex items-center justify-center bg-[#191919]/70 p-4 backdrop-blur-md"
+                @click.self="closeDetail"
             >
 
                 <div
-                    class="mx-auto flex min-h-full max-w-6xl items-center justify-center"
+                    class="relative max-h-[92vh] w-full max-w-6xl overflow-y-auto bg-[#FFF8FA]"
                 >
 
-                    <div class="relative w-full">
+                    <!-- HEADER -->
 
-                        <!-- Close -->
+                    <div
+                        class="sticky top-0 z-20 flex items-center justify-between border-b border-[#191919]/10 bg-[#FFF8FA]/90 px-6 py-5 backdrop-blur-xl md:px-8"
+                    >
+
+                        <div>
+
+                            <p
+                                class="text-[8px] font-semibold uppercase tracking-[0.3em] text-[#E85D75]"
+                            >
+                                Selected Work
+                            </p>
+
+                            <h2
+                                class="mt-2 text-xl font-medium tracking-[-0.04em] md:text-2xl"
+                            >
+                                {{
+                                    selectedPortfolio.title
+                                }}<span
+                                    class="text-[#E85D75]"
+                                >.</span>
+                            </h2>
+
+                        </div>
+
                         <button
                             type="button"
-                            @click="closePortfolio"
-                            class="absolute right-0 top-0 z-20 flex h-12 w-12 items-center justify-center rounded-full border border-white/15 bg-[#191919]/50 text-white/60 backdrop-blur-sm transition hover:border-white/40 hover:text-white"
-                            aria-label="Close"
+                            class="flex h-10 w-10 items-center justify-center rounded-full border border-[#191919]/10 text-lg transition hover:border-[#E85D75]/30 hover:text-[#E85D75]"
+                            @click="closeDetail"
                         >
                             ×
                         </button>
 
+                    </div>
 
-                        <!-- Image -->
+                    <!-- BODY -->
+
+                    <div
+                        class="grid lg:grid-cols-[1.2fr_0.8fr]"
+                    >
+
+                        <!-- IMAGE -->
+
                         <div
-                            class="overflow-hidden bg-[#F4F0F1]"
+                            class="bg-[#F4F0F1]"
                         >
 
                             <img
-                                v-if="selectedPortfolio.image"
-                                :src="selectedPortfolio.image"
-                                :alt="selectedPortfolio.title"
+                                v-if="
+                                    imageUrl(
+                                        selectedPortfolio
+                                    )
+                                "
+                                :src="
+                                    imageUrl(
+                                        selectedPortfolio
+                                    )
+                                "
+                                :alt="
+                                    selectedPortfolio.title
+                                "
                                 class="max-h-[75vh] w-full object-contain"
                             />
 
-
                             <div
                                 v-else
-                                class="flex aspect-video items-center justify-center"
+                                class="flex min-h-[500px] items-center justify-center"
                             >
-
                                 <span
-                                    class="text-xs uppercase tracking-[0.3em] text-[#191919]/20"
+                                    class="text-[9px] uppercase tracking-[0.3em] text-[#191919]/25"
                                 >
-                                    Teras Memori
+                                    No image available
                                 </span>
-
                             </div>
 
                         </div>
 
+                        <!-- INFORMATION -->
 
-                        <!-- Detail -->
                         <div
-                            class="grid gap-6 border-x border-b border-white/10 bg-[#111] p-6 sm:p-8 md:grid-cols-[1fr_auto] md:items-end"
+                            class="flex flex-col justify-between p-7 md:p-10"
                         >
 
                             <div>
 
-                                <span
-                                    v-if="selectedPortfolio.category"
-                                    class="text-[9px] uppercase tracking-[0.3em] text-white/30"
-                                >
-                                    {{ selectedPortfolio.category }}
-                                </span>
-
-
-                                <h2
-                                    class="mt-3 text-3xl font-medium tracking-[-0.04em] text-white sm:text-4xl"
-                                >
-                                    {{ selectedPortfolio.title }}
-                                </h2>
-
-
                                 <p
-                                    v-if="selectedPortfolio.description"
-                                    class="mt-4 max-w-2xl text-sm leading-7 text-white/35"
+                                    class="text-[8px] font-semibold uppercase tracking-[0.3em] text-[#E85D75]"
                                 >
-                                    {{ selectedPortfolio.description }}
+                                    {{
+                                        selectedPortfolio.category ||
+                                        'Selected Work'
+                                    }}
                                 </p>
+
+                                <h3
+                                    class="mt-5 text-4xl font-medium leading-none tracking-[-0.06em] md:text-5xl"
+                                >
+                                    {{
+                                        selectedPortfolio.title
+                                    }}<span
+                                        class="text-[#E85D75]"
+                                    >.</span>
+                                </h3>
+
+                                <div
+                                    v-if="
+                                        selectedPortfolio.description
+                                    "
+                                    class="mt-8 border-t border-[#191919]/10 pt-7"
+                                >
+
+                                    <p
+                                        class="text-[8px] font-semibold uppercase tracking-[0.25em] text-[#191919]/30"
+                                    >
+                                        About the project
+                                    </p>
+
+                                    <p
+                                        class="mt-4 text-sm leading-7 text-[#191919]/50"
+                                    >
+                                        {{
+                                            selectedPortfolio.description
+                                        }}
+                                    </p>
+
+                                </div>
 
                             </div>
 
+                            <div class="mt-12">
 
-                            <div class="text-left md:text-right">
+                                <div
+                                    class="flex items-center gap-4"
+                                >
+                                    <span
+                                        class="h-px w-10 bg-[#E85D75]"
+                                    ></span>
+
+                                    <span
+                                        class="text-[8px] font-semibold uppercase tracking-[0.25em] text-[#191919]/30"
+                                    >
+                                        Teras Memori
+                                    </span>
+                                </div>
 
                                 <p
-                                    class="text-[9px] uppercase tracking-[0.3em] text-white/20"
+                                    class="mt-5 text-xs leading-6 text-[#191919]/30"
                                 >
-                                    Project
-                                </p>
-
-                                <p class="mt-2 text-sm text-white/50">
-                                    #{{ String(selectedPortfolio.id).padStart(3, '0') }}
+                                    Every image deserves
+                                    thoughtful attention.
                                 </p>
 
                             </div>
@@ -773,41 +741,17 @@ onUnmounted(() => {
 
         </Transition>
 
-
-        <!-- =====================================================
-             FOOTER
-        ====================================================== -->
-        <div
-            class="mx-auto flex max-w-[1600px] flex-col justify-between gap-4 border-t border-[#191919]/10 px-6 py-8 text-[9px] uppercase tracking-[0.3em] text-[#191919]/25 sm:flex-row sm:px-10 lg:px-16"
-        >
-
-            <span>
-                Teras Memori
-            </span>
-
-            <span>
-                Selected Work
-            </span>
-
-            <span>
-                © {{ new Date().getFullYear() }}
-            </span>
-
-        </div>
-
-    </div>
+    </main>
 </template>
 
-
 <style scoped>
-.modal-enter-active,
-.modal-leave-active {
-    transition: opacity 0.3s ease;
+.fade-enter-active,
+.fade-leave-active {
+    transition: opacity 0.25s ease;
 }
 
-.modal-enter-from,
-.modal-leave-to {
+.fade-enter-from,
+.fade-leave-to {
     opacity: 0;
 }
 </style>
-```

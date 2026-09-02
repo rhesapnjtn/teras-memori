@@ -24,6 +24,10 @@ const navigation = [
         name: 'About',
         route: 'about',
     },
+    {
+        name: 'Track Order',
+        route: 'track-order',
+    },
 ]
 
 const isActive = (routeName) => {
@@ -42,6 +46,7 @@ const closeMobileMenu = () => {
         <!-- =====================================================
              HEADER
         ====================================================== -->
+
         <header
             class="sticky top-0 z-50 border-b border-[#191919]/10 bg-[#FFF8FA]/90 backdrop-blur-xl"
         >
@@ -53,6 +58,7 @@ const closeMobileMenu = () => {
                 <!-- =================================================
                      LOGO
                 ================================================== -->
+
                 <RouterLink
                     :to="{ name: 'home' }"
                     @click="closeMobileMenu"
@@ -92,15 +98,16 @@ const closeMobileMenu = () => {
                 <!-- =================================================
                      DESKTOP NAVIGATION
                 ================================================== -->
+
                 <nav
-                    class="hidden items-center gap-9 md:flex"
+                    class="hidden items-center gap-7 md:flex lg:gap-9"
                 >
 
                     <RouterLink
                         v-for="item in navigation"
                         :key="item.route"
                         :to="{ name: item.route }"
-                        class="group relative py-2 text-[10px] uppercase tracking-[0.25em] transition duration-300"
+                        class="group relative whitespace-nowrap py-2 text-[10px] uppercase tracking-[0.2em] transition duration-300 lg:tracking-[0.25em]"
                         :class="
                             isActive(item.route)
                                 ? 'text-[#191919]'
@@ -112,6 +119,7 @@ const closeMobileMenu = () => {
 
 
                         <!-- Active indicator -->
+
                         <span
                             class="absolute -bottom-1 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-[#E85D75] transition duration-300"
                             :class="
@@ -129,12 +137,11 @@ const closeMobileMenu = () => {
                 <!-- =================================================
                      RIGHT SIDE
                 ================================================== -->
+
                 <div class="flex items-center gap-5">
 
-                    
-
-
                     <!-- CTA -->
+
                     <RouterLink
                         :to="{ name: 'order' }"
                         class="group hidden items-center gap-4 rounded-full bg-[#191919] px-5 py-3 text-[9px] font-semibold uppercase tracking-[0.22em] text-white transition duration-500 hover:-translate-y-0.5 hover:bg-[#E85D75] sm:inline-flex"
@@ -154,11 +161,13 @@ const closeMobileMenu = () => {
 
 
                     <!-- Mobile menu button -->
+
                     <button
                         type="button"
                         @click="mobileMenuOpen = !mobileMenuOpen"
                         class="flex h-10 w-10 items-center justify-center rounded-full border border-[#191919]/10 transition duration-300 hover:border-[#E85D75] md:hidden"
                         aria-label="Toggle navigation"
+                        :aria-expanded="mobileMenuOpen"
                     >
 
                         <div class="flex w-4 flex-col gap-1.5">
@@ -171,6 +180,7 @@ const closeMobileMenu = () => {
                                         : ''
                                 "
                             ></span>
+
 
                             <span
                                 class="h-px w-full bg-[#191919] transition duration-300"
@@ -193,6 +203,7 @@ const closeMobileMenu = () => {
             <!-- =================================================
                  MOBILE MENU
             ================================================== -->
+
             <Transition
                 enter-active-class="transition duration-300 ease-out"
                 enter-from-class="opacity-0 -translate-y-3"
@@ -224,8 +235,9 @@ const closeMobileMenu = () => {
                                     <span
                                         class="text-[9px] tracking-[0.2em] text-[#E85D75]"
                                     >
-                                        0{{ index + 1 }}
+                                        {{ String(index + 1).padStart(2, '0') }}
                                     </span>
+
 
                                     <span
                                         class="text-2xl font-medium tracking-[-0.04em]"
@@ -240,6 +252,7 @@ const closeMobileMenu = () => {
 
                                 </div>
 
+
                                 <span
                                     class="text-xl text-[#191919]/20 transition duration-300 group-hover:translate-x-1 group-hover:text-[#E85D75]"
                                 >
@@ -251,7 +264,10 @@ const closeMobileMenu = () => {
                         </div>
 
 
-                        <!-- Mobile CTA -->
+                        <!-- =================================================
+                             MOBILE CTA
+                        ================================================== -->
+
                         <RouterLink
                             :to="{ name: 'order' }"
                             @click="closeMobileMenu"
@@ -262,6 +278,7 @@ const closeMobileMenu = () => {
                                 Start a project
                             </span>
 
+
                             <span class="text-lg">
                                 →
                             </span>
@@ -269,11 +286,14 @@ const closeMobileMenu = () => {
                         </RouterLink>
 
 
-                        <!-- Mobile admin -->
+                        <!-- =================================================
+                             MOBILE ADMIN
+                        ================================================== -->
+
                         <RouterLink
                             :to="{ name: 'login' }"
                             @click="closeMobileMenu"
-                            class="mt-5 block text-center text-[9px] uppercase tracking-[0.3em] text-[#191919]/30"
+                            class="mt-5 block text-center text-[9px] uppercase tracking-[0.3em] text-[#191919]/30 transition hover:text-[#E85D75]"
                         >
                             Admin access
                         </RouterLink>
@@ -290,6 +310,7 @@ const closeMobileMenu = () => {
         <!-- =====================================================
              PAGE CONTENT
         ====================================================== -->
+
         <main>
             <RouterView />
         </main>
@@ -298,6 +319,7 @@ const closeMobileMenu = () => {
         <!-- =====================================================
              FOOTER
         ====================================================== -->
+
         <footer
             class="border-t border-[#191919]/10 bg-[#FFF8FA]"
         >
@@ -306,12 +328,18 @@ const closeMobileMenu = () => {
                 class="mx-auto max-w-[1600px] px-6 py-16 sm:px-10 md:py-20 lg:px-16"
             >
 
-                <!-- Main footer -->
+                <!-- =================================================
+                     MAIN FOOTER
+                ================================================== -->
+
                 <div
                     class="grid gap-12 md:grid-cols-[1.4fr_0.6fr_0.6fr]"
                 >
 
-                    <!-- Studio -->
+                    <!-- =================================================
+                         STUDIO
+                    ================================================== -->
+
                     <div>
 
                         <div
@@ -328,6 +356,7 @@ const closeMobileMenu = () => {
 
                             </div>
 
+
                             <div class="leading-none">
 
                                 <div
@@ -335,6 +364,7 @@ const closeMobileMenu = () => {
                                 >
                                     TERAS
                                 </div>
+
 
                                 <div
                                     class="mt-1 text-[9px] tracking-[0.35em] text-[#191919]/40"
@@ -359,7 +389,10 @@ const closeMobileMenu = () => {
                     </div>
 
 
-                    <!-- Explore -->
+                    <!-- =================================================
+                         EXPLORE
+                    ================================================== -->
+
                     <div>
 
                         <span
@@ -367,6 +400,7 @@ const closeMobileMenu = () => {
                         >
                             Explore
                         </span>
+
 
                         <div
                             class="mt-6 flex flex-col items-start gap-4"
@@ -386,7 +420,10 @@ const closeMobileMenu = () => {
                     </div>
 
 
-                    <!-- Studio -->
+                    <!-- =================================================
+                         STUDIO SERVICES
+                    ================================================== -->
+
                     <div>
 
                         <span
@@ -394,6 +431,7 @@ const closeMobileMenu = () => {
                         >
                             Studio
                         </span>
+
 
                         <div class="mt-6 space-y-4">
 
@@ -409,12 +447,30 @@ const closeMobileMenu = () => {
                                 Background removal
                             </p>
 
+
                             <RouterLink
-                                :to="{ name: 'order' }"
+                                :to="{ name: 'track-order' }"
                                 class="inline-flex items-center gap-3 text-[9px] uppercase tracking-[0.25em] text-[#E85D75] transition duration-300 hover:gap-5"
                             >
+                                Track your order
+
+                                <span>
+                                    →
+                                </span>
+
+                            </RouterLink>
+
+
+                            <RouterLink
+                                :to="{ name: 'order' }"
+                                class="flex w-fit items-center gap-3 text-[9px] uppercase tracking-[0.25em] text-[#191919]/45 transition duration-300 hover:gap-5 hover:text-[#E85D75]"
+                            >
                                 Start a project
-                                <span>→</span>
+
+                                <span>
+                                    →
+                                </span>
+
                             </RouterLink>
 
                         </div>
@@ -424,7 +480,10 @@ const closeMobileMenu = () => {
                 </div>
 
 
-                <!-- Footer bottom -->
+                <!-- =================================================
+                     FOOTER BOTTOM
+                ================================================== -->
+
                 <div
                     class="mt-16 flex flex-col gap-5 border-t border-[#191919]/10 pt-7 text-[9px] uppercase tracking-[0.25em] text-[#191919]/25 sm:flex-row sm:items-center sm:justify-between"
                 >
@@ -433,9 +492,11 @@ const closeMobileMenu = () => {
                         Teras Memori Studio
                     </span>
 
+
                     <span>
                         Your photo / Our craft
                     </span>
+
 
                     <span>
                         © {{ new Date().getFullYear() }}

@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
+
 class Order extends Model
 {
     protected $fillable = [
@@ -40,4 +41,9 @@ class Order extends Model
     {
         return $this->hasOne(Review::class);
     }
+    
+    public function files(): HasMany
+    {
+    return $this->hasMany(OrderFile::class);
+    }   
 }

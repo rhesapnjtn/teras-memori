@@ -24,6 +24,16 @@ class CustomerController extends Controller
     {
         $customer->load([
             'orders' => function ($query) {
+                $query
+                    ->with([
+                        'items.service',
+                        'payment',
+                        'files',
+                        'review',
+                    ])
+                    ->latest();
+            },
+            'reviews' => function ($query) {
                 $query->latest();
             },
         ]);
