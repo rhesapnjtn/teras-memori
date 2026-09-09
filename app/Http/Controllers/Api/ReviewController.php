@@ -8,6 +8,7 @@ use App\Http\Resources\ReviewResource;
 use App\Models\Order;
 use App\Models\Review;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class ReviewController extends Controller
 {
@@ -57,4 +58,17 @@ class ReviewController extends Controller
 
         return new ReviewResource($review);
     }
+    public function published(): AnonymousResourceCollection
+{
+    $reviews = Review::query()
+        ->with([
+            'customer',
+            'order',
+        ])
+        ->where('is_published', true)
+        ->latest()
+        ->get();
+
+    return ReviewResource::collection($reviews);
+}
 }

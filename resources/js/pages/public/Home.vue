@@ -1,7 +1,8 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import api from '../../services/api'
+import Testimonials from '../../components/landing/Testimonials.vue'
 
 const services = ref([])
 const portfolios = ref([])
@@ -36,10 +37,6 @@ const fetchHomeData = async () => {
 const formatPrice = (price) => {
     return new Intl.NumberFormat('id-ID').format(Number(price))
 }
-
-const featuredPortfolio = computed(() => {
-    return portfolios.value[0] || null
-})
 
 onMounted(fetchHomeData)
 </script>
@@ -340,7 +337,6 @@ onMounted(fetchHomeData)
                             class="absolute -right-2 bottom-20 z-20 hidden [writing-mode:vertical-rl] text-[8px] font-bold uppercase tracking-[0.35em] text-[#A98B92] sm:block"
                         >
                             Crafted with intention
-
                         </div>
 
                     </div>
@@ -1249,6 +1245,12 @@ onMounted(fetchHomeData)
             </div>
 
         </section>
+
+
+        <!-- =====================================================
+             TESTIMONIALS — CUSTOMER REVIEWS
+        ====================================================== -->
+        <Testimonials />
 
 
         <!-- =====================================================

@@ -10,6 +10,7 @@ class Chat extends Model
 {
     protected $fillable = [
         'customer_id',
+        'public_token',
         'status',
     ];
 

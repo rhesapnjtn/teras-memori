@@ -1,4 +1,3 @@
-```vue
 <script setup>
 import { RouterLink } from 'vue-router'
 </script>
@@ -22,7 +21,7 @@ import { RouterLink } from 'vue-router'
                 "
             ></div>
 
-            <!-- Decorative circles -->
+            <!-- Decorative geometry -->
             <div
                 class="pointer-events-none absolute -right-32 -top-32 h-[500px] w-[500px] rounded-full border border-[#E85D75]/10"
             ></div>
@@ -35,14 +34,12 @@ import { RouterLink } from 'vue-router'
                 class="pointer-events-none absolute -left-40 bottom-0 h-[400px] w-[400px] rounded-full border border-[#191919]/[0.04]"
             ></div>
 
-
             <div
                 class="relative mx-auto max-w-[1600px] px-6 pb-24 pt-20 sm:px-10 md:pb-32 md:pt-28 lg:px-16"
             >
 
                 <!-- Label -->
                 <div class="mb-10 flex items-center gap-4">
-
                     <span class="h-px w-12 bg-[#E85D75]"></span>
 
                     <span
@@ -50,7 +47,6 @@ import { RouterLink } from 'vue-router'
                     >
                         04 — About The Studio
                     </span>
-
                 </div>
 
 
@@ -60,7 +56,6 @@ import { RouterLink } from 'vue-router'
                 >
 
                     <div>
-
                         <h1
                             class="max-w-6xl text-[17vw] font-medium leading-[0.75] tracking-[-0.085em] sm:text-[13vw] lg:text-[10vw]"
                         >
@@ -69,13 +64,11 @@ import { RouterLink } from 'vue-router'
                                 TERAS.
                             </span>
                         </h1>
-
                     </div>
 
 
                     <!-- Studio mark -->
                     <div class="hidden lg:block">
-
                         <div class="relative mx-auto h-36 w-36">
 
                             <div
@@ -101,7 +94,6 @@ import { RouterLink } from 'vue-router'
                             </div>
 
                         </div>
-
                     </div>
 
                 </div>
@@ -138,7 +130,7 @@ import { RouterLink } from 'vue-router'
 
 
         <!-- =====================================================
-             STUDIO STATEMENT
+             WHO WE ARE
         ====================================================== -->
         <section class="border-b border-[#191919]/10">
 
@@ -146,16 +138,15 @@ import { RouterLink } from 'vue-router'
                 class="mx-auto max-w-[1600px] px-6 py-24 sm:px-10 md:py-36 lg:px-16"
             >
 
-                <div
-                    class="grid gap-14 lg:grid-cols-[0.4fr_1fr]"
-                >
+                <div class="grid gap-16 lg:grid-cols-[0.4fr_1fr]">
 
+                    <!-- Label -->
                     <div>
 
                         <span
                             class="text-[10px] uppercase tracking-[0.35em] text-[#191919]/30"
                         >
-                            The idea
+                            Who we are
                         </span>
 
                         <div
@@ -165,43 +156,39 @@ import { RouterLink } from 'vue-router'
                     </div>
 
 
+                    <!-- Content -->
                     <div>
 
                         <h2
-                            class="max-w-5xl text-4xl font-medium leading-[1.03] tracking-[-0.055em] text-[#191919]/80 sm:text-5xl md:text-6xl lg:text-7xl"
+                            class="max-w-6xl text-4xl font-medium leading-[1.03] tracking-[-0.055em] text-[#191919]/80 sm:text-5xl md:text-6xl lg:text-7xl"
                         >
-                            We don't just edit
-                            <span class="text-[#191919]/20">
-                                photographs.
-                            </span>
-
-                            <br />
-
-                            We help preserve
+                            A small studio with a
                             <span class="text-[#E85D75]">
-                                moments.
+                                deep respect
                             </span>
+                            for photographs.
                         </h2>
 
 
-                        <div class="mt-10 grid gap-8 md:grid-cols-2">
+                        <div
+                            class="mt-12 grid gap-10 md:grid-cols-2"
+                        >
 
                             <p
-                                class="text-sm leading-7 text-[#191919]/40 md:text-base"
+                                class="text-sm leading-7 text-[#191919]/45 md:text-base"
                             >
-                                A photograph can hold a person, a place,
-                                a feeling, or an entire chapter of life.
-                                Our role is to make sure the image remains
-                                worthy of that memory.
+                                Teras Memori was created with a simple
+                                purpose — helping people take better care
+                                of the photographs that matter to them.
                             </p>
 
                             <p
-                                class="text-sm leading-7 text-[#191919]/40 md:text-base"
+                                class="text-sm leading-7 text-[#191919]/45 md:text-base"
                             >
-                                From subtle color correction to detailed
-                                restoration, every project is approached
-                                with patience, precision and respect for
-                                the original image.
+                                We combine digital tools, technical
+                                precision and a human eye to transform
+                                ordinary images into photographs that feel
+                                worth keeping.
                             </p>
 
                         </div>
@@ -216,7 +203,7 @@ import { RouterLink } from 'vue-router'
 
 
         <!-- =====================================================
-             ARTIST PHILOSOPHY
+             THE IDEA
         ====================================================== -->
         <section class="border-b border-[#191919]/10">
 
@@ -226,36 +213,35 @@ import { RouterLink } from 'vue-router'
 
                 <div class="grid gap-16 lg:grid-cols-2 lg:items-center">
 
-                    <!-- Left -->
+                    <!-- Statement -->
                     <div>
 
                         <span
                             class="text-[10px] uppercase tracking-[0.35em] text-[#191919]/30"
                         >
-                            Our philosophy
+                            The idea
                         </span>
 
-
                         <h2
-                            class="mt-8 max-w-xl text-5xl font-medium leading-[0.92] tracking-[-0.06em] sm:text-6xl md:text-7xl"
+                            class="mt-8 max-w-2xl text-5xl font-medium leading-[0.92] tracking-[-0.06em] sm:text-6xl md:text-7xl"
                         >
-                            Less
+                            We don't just edit
                             <span class="text-[#191919]/20">
-                                noise.
+                                photographs.
                             </span>
 
                             <br />
 
-                            More
+                            We help preserve
                             <span class="text-[#E85D75]">
-                                feeling.
+                                moments.
                             </span>
                         </h2>
 
                     </div>
 
 
-                    <!-- Right -->
+                    <!-- Explanation -->
                     <div class="relative">
 
                         <div
@@ -269,22 +255,141 @@ import { RouterLink } from 'vue-router'
                             <p
                                 class="text-xl leading-9 text-[#191919]/60 md:text-2xl md:leading-10"
                             >
-                                We believe good editing should feel
-                                <span class="text-[#191919]">
-                                    natural.
-                                </span>
+                                A photograph can hold a person, a place,
+                                a feeling, or an entire chapter of life.
                             </p>
 
                             <p
                                 class="mt-8 max-w-lg text-sm leading-7 text-[#191919]/35 md:text-base"
                             >
-                                The goal isn't to make an image look
-                                artificial or overly processed. It is to
-                                reveal what was already there — the light,
-                                emotion, texture and character.
+                                That's why every image deserves more than
+                                a quick adjustment. It deserves attention,
+                                patience and an understanding of what makes
+                                the original photograph meaningful.
                             </p>
 
                         </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =====================================================
+             OUR PHILOSOPHY
+        ====================================================== -->
+        <section class="border-b border-[#191919]/10">
+
+            <div
+                class="mx-auto max-w-[1600px] px-6 py-24 sm:px-10 md:py-36 lg:px-16"
+            >
+
+                <div class="mb-16">
+
+                    <span
+                        class="text-[10px] uppercase tracking-[0.35em] text-[#191919]/30"
+                    >
+                        Our philosophy
+                    </span>
+
+                    <h2
+                        class="mt-5 max-w-3xl text-4xl font-medium leading-[0.95] tracking-[-0.055em] sm:text-5xl md:text-6xl"
+                    >
+                        Less noise.
+                        <span class="text-[#E85D75]">
+                            More feeling.
+                        </span>
+                    </h2>
+
+                </div>
+
+
+                <!-- Principles -->
+                <div
+                    class="grid gap-px overflow-hidden border border-[#191919]/10 bg-[#191919]/10 md:grid-cols-3"
+                >
+
+                    <!-- Principle -->
+                    <div
+                        class="group bg-[#FFF8FA] p-8 transition duration-500 hover:bg-white md:p-10"
+                    >
+
+                        <span
+                            class="text-[10px] tracking-[0.25em] text-[#E85D75]"
+                        >
+                            01
+                        </span>
+
+                        <h3
+                            class="mt-16 text-2xl font-medium tracking-[-0.03em]"
+                        >
+                            Natural
+                        </h3>
+
+                        <p
+                            class="mt-4 text-sm leading-7 text-[#191919]/35"
+                        >
+                            Editing should enhance the photograph,
+                            not make it feel artificial.
+                        </p>
+
+                    </div>
+
+
+                    <!-- Principle -->
+                    <div
+                        class="group bg-[#FFF8FA] p-8 transition duration-500 hover:bg-white md:p-10"
+                    >
+
+                        <span
+                            class="text-[10px] tracking-[0.25em] text-[#E85D75]"
+                        >
+                            02
+                        </span>
+
+                        <h3
+                            class="mt-16 text-2xl font-medium tracking-[-0.03em]"
+                        >
+                            Precise
+                        </h3>
+
+                        <p
+                            class="mt-4 text-sm leading-7 text-[#191919]/35"
+                        >
+                            Every color, detail and adjustment has
+                            a purpose.
+                        </p>
+
+                    </div>
+
+
+                    <!-- Principle -->
+                    <div
+                        class="group bg-[#FFF8FA] p-8 transition duration-500 hover:bg-white md:p-10"
+                    >
+
+                        <span
+                            class="text-[10px] tracking-[0.25em] text-[#E85D75]"
+                        >
+                            03
+                        </span>
+
+                        <h3
+                            class="mt-16 text-2xl font-medium tracking-[-0.03em]"
+                        >
+                            Meaningful
+                        </h3>
+
+                        <p
+                            class="mt-4 text-sm leading-7 text-[#191919]/35"
+                        >
+                            The final image should still feel like
+                            the memory you started with.
+                        </p>
 
                     </div>
 
@@ -304,7 +409,9 @@ import { RouterLink } from 'vue-router'
                 class="mx-auto max-w-[1600px] px-6 py-24 sm:px-10 md:py-36 lg:px-16"
             >
 
-                <div class="mb-16 flex items-end justify-between gap-8">
+                <div
+                    class="mb-16 flex items-end justify-between gap-8"
+                >
 
                     <div>
 
@@ -331,9 +438,11 @@ import { RouterLink } from 'vue-router'
                 </div>
 
 
-                <div class="divide-y divide-[#191919]/10 border-y border-[#191919]/10">
+                <div
+                    class="divide-y divide-[#191919]/10 border-y border-[#191919]/10"
+                >
 
-                    <!-- Item -->
+                    <!-- Photo Editing -->
                     <div
                         class="group grid gap-6 py-8 transition duration-500 md:grid-cols-[100px_1fr_auto] md:items-center"
                     >
@@ -370,7 +479,7 @@ import { RouterLink } from 'vue-router'
                     </div>
 
 
-                    <!-- Item -->
+                    <!-- Retouching -->
                     <div
                         class="group grid gap-6 py-8 transition duration-500 md:grid-cols-[100px_1fr_auto] md:items-center"
                     >
@@ -407,7 +516,7 @@ import { RouterLink } from 'vue-router'
                     </div>
 
 
-                    <!-- Item -->
+                    <!-- Restoration -->
                     <div
                         class="group grid gap-6 py-8 transition duration-500 md:grid-cols-[100px_1fr_auto] md:items-center"
                     >
@@ -444,7 +553,7 @@ import { RouterLink } from 'vue-router'
                     </div>
 
 
-                    <!-- Item -->
+                    <!-- Background Removal -->
                     <div
                         class="group grid gap-6 py-8 transition duration-500 md:grid-cols-[100px_1fr_auto] md:items-center"
                     >
@@ -510,15 +619,18 @@ import { RouterLink } from 'vue-router'
                             class="mt-6 max-w-xs text-sm leading-7 text-[#191919]/35"
                         >
                             Simple for you.
+                            <br />
                             Precise for us.
                         </p>
 
                     </div>
 
 
-                    <div class="grid gap-px overflow-hidden border border-[#191919]/10 bg-[#191919]/10 sm:grid-cols-3">
+                    <div
+                        class="grid gap-px overflow-hidden border border-[#191919]/10 bg-[#191919]/10 sm:grid-cols-3"
+                    >
 
-                        <!-- Step -->
+                        <!-- Step 01 -->
                         <div class="bg-[#FFF8FA] p-8 md:p-10">
 
                             <span
@@ -543,7 +655,7 @@ import { RouterLink } from 'vue-router'
                         </div>
 
 
-                        <!-- Step -->
+                        <!-- Step 02 -->
                         <div class="bg-[#FFF8FA] p-8 md:p-10">
 
                             <span
@@ -568,7 +680,7 @@ import { RouterLink } from 'vue-router'
                         </div>
 
 
-                        <!-- Step -->
+                        <!-- Step 03 -->
                         <div class="bg-[#FFF8FA] p-8 md:p-10">
 
                             <span
@@ -787,4 +899,3 @@ import { RouterLink } from 'vue-router'
 
     </div>
 </template>
-```

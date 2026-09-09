@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\Admin\ChatController as AdminChatController;
 
 use Illuminate\Support\Facades\Route;
 
+
 /*
 |--------------------------------------------------------------------------
 | Public
@@ -124,6 +125,11 @@ Route::get(
 |
 */
 
+Route::get(
+    '/reviews/published',
+    [ReviewController::class, 'published']
+);
+
 Route::post(
     '/reviews',
     [ReviewController::class, 'store']
@@ -139,21 +145,109 @@ Route::get(
 |--------------------------------------------------------------------------
 | Public Chat
 |--------------------------------------------------------------------------
+|
+| Customer dapat melakukan chat tanpa login.
+|
+| Security:
+|
+| - Customer harus memberikan email
+| - Customer harus memberikan order number
+| - Order harus benar-benar milik customer
+| - Setelah berhasil, customer mendapatkan public chat token
+| - Token digunakan untuk mengakses chat dan mengirim pesan
+|
+*/
+
+
+/*
+|--------------------------------------------------------------------------
+| Create Chat
+|--------------------------------------------------------------------------
+|
+| Customer wajib mengirim:
+|
+| - email
+| - order_number
+|
+| Rate limit:
+| 10 request per menit berdasarkan IP + email.
+|
 */
 
 Route::post(
     '/chats',
     [ChatController::class, 'store']
+)->middleware(
+    'throttle:public-chat-create'
 );
+
+
+/*
+|--------------------------------------------------------------------------
+| Find Customer Chat
+|--------------------------------------------------------------------------
+|
+| Customer dapat mencari chat sebelumnya menggunakan:
+|
+| - email
+| - order_number
+|
+| Keduanya harus cocok dengan order milik customer.
+|
+| Rate limit:
+| 20 request per menit berdasarkan IP + email.
+|
+*/
+
+Route::get(
+    '/chats/customer',
+    [ChatController::class, 'customerChat']
+)->middleware(
+    'throttle:public-chat-customer'
+);
+
+
+/*
+|--------------------------------------------------------------------------
+| Chat Detail
+|--------------------------------------------------------------------------
+|
+| Setelah mendapatkan public token,
+| token dikirim melalui header:
+|
+| X-Chat-Token
+|
+| Rate limit:
+| 30 request per menit berdasarkan IP + chat token.
+|
+*/
 
 Route::get(
     '/chats/{chat}',
     [ChatController::class, 'show']
+)->middleware(
+    'throttle:public-chat-show'
 );
+
+
+/*
+|--------------------------------------------------------------------------
+| Send Customer Message
+|--------------------------------------------------------------------------
+|
+| Customer menggunakan X-Chat-Token
+| untuk mengirim pesan.
+|
+| Rate limit:
+| 20 request per menit berdasarkan IP + chat token.
+|
+*/
 
 Route::post(
     '/chats/{chat}/messages',
     [ChatController::class, 'storeMessage']
+)->middleware(
+    'throttle:public-chat-message'
 );
 
 
@@ -173,9 +267,15 @@ Route::post(
 |--------------------------------------------------------------------------
 | Authenticated
 |--------------------------------------------------------------------------
+|
+| Semua route di bawah ini membutuhkan:
+|
+| auth:sanctum
+|
 */
 
 Route::middleware('auth:sanctum')->group(function () {
+
 
     /*
     |--------------------------------------------------------------------------
@@ -306,6 +406,10 @@ Route::middleware('auth:sanctum')->group(function () {
     |--------------------------------------------------------------------------
     | Admin - Chats
     |--------------------------------------------------------------------------
+    |
+    | Admin chat tetap terpisah dari public chat.
+    | Route ini membutuhkan auth:sanctum.
+    |
     */
 
     Route::get(

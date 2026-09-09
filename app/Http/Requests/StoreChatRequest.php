@@ -14,11 +14,25 @@ class StoreChatRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'customer_id' => [
+            'email' => [
                 'required',
-                'integer',
-                'exists:customers,id',
+                'email',
+                'max:255',
             ],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'email.required' =>
+                'Email wajib diisi.',
+
+            'email.email' =>
+                'Format email tidak valid.',
+
+            'email.max' =>
+                'Email maksimal 255 karakter.',
         ];
     }
 }

@@ -47,6 +47,11 @@ const routes = [
                 component: () =>
                     import('../pages/public/Order.vue'),
             },
+            {
+    path: 'chat',
+    name: 'chat',
+    component: () => import('../pages/public/Chat.vue'),
+},
 
             /*
             |--------------------------------------------------------------------------
@@ -70,7 +75,9 @@ const routes = [
                 component: () => import('../pages/public/TrackOrder.vue'),
 },
         ],
+        
     },
+    
 
 
     /*

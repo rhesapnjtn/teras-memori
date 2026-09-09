@@ -5,7 +5,7 @@ namespace App\Http\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class ChatResource extends JsonResource
+class PublicChatResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
@@ -20,10 +20,13 @@ class ChatResource extends JsonResource
 
             'status' => $this->status,
 
-            'messages_count' => $this->when(
-                isset($this->messages_count),
-                $this->messages_count
-            ),
+            /*
+            |--------------------------------------------------------------------------
+            | Token hanya diberikan kepada public chat
+            |--------------------------------------------------------------------------
+            */
+
+            'public_token' => $this->public_token,
 
             'messages' => ChatMessageResource::collection(
                 $this->whenLoaded('messages')

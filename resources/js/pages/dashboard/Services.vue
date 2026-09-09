@@ -1,6 +1,12 @@
 ```vue
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import {
+    computed,
+    nextTick,
+    onMounted,
+    onUnmounted,
+    ref,
+} from 'vue'
 import api from '../../services/api'
 
 /*
@@ -10,10 +16,9 @@ import api from '../../services/api'
 */
 
 const services = ref([])
+
 const loading = ref(true)
 const saving = ref(false)
-const deleting = ref(false)
-
 const errorMessage = ref('')
 const successMessage = ref('')
 
@@ -22,6 +27,11 @@ const statusFilter = ref('all')
 
 const showModal = ref(false)
 const editingService = ref(null)
+
+const deletingId = ref(null)
+const togglingId = ref(null)
+
+const validationErrors = ref({})
 
 const form = ref({
     name: '',
@@ -32,7 +42,6 @@ const form = ref({
     is_active: true,
 })
 
-
 /*
 |--------------------------------------------------------------------------
 | Helpers
@@ -40,69 +49,119 @@ const form = ref({
 */
 
 const formatPrice = (price) => {
-    return new Intl.NumberFormat('id-ID').format(Number(price || 0))
+    const value = Number(price)
+
+    if (Number.isNaN(value)) {
+        return 'Rp 0'
+    }
+
+    return new Intl.NumberFormat('id-ID', {
+        style: 'currency',
+        currency: 'IDR',
+        maximumFractionDigits: 0,
+    }).format(value)
 }
 
-const resetMessages = () => {
+const normalizeNumber = (value) => {
+    const number = Number(value)
+
+    return Number.isFinite(number) ? number : 0
+}
+
+const getApiMessage = (error, fallback) => {
+    return (
+        error?.response?.data?.message ||
+        error?.response?.data?.error ||
+        fallback
+    )
+}
+
+const getFieldError = (field) => {
+    const errors = validationErrors.value
+
+    if (!errors || !errors[field]) {
+        return ''
+    }
+
+    if (Array.isArray(errors[field])) {
+        return errors[field][0]
+    }
+
+    return errors[field]
+}
+
+const clearMessages = () => {
     errorMessage.value = ''
     successMessage.value = ''
 }
 
-const resetForm = () => {
-    form.value = {
-        name: '',
-        description: '',
-        price: '',
-        duration: '',
-        image: '',
-        is_active: true,
-    }
-
-    editingService.value = null
+const clearValidationErrors = () => {
+    validationErrors.value = {}
 }
-
 
 /*
 |--------------------------------------------------------------------------
-| Computed
+| Image
+|--------------------------------------------------------------------------
+*/
+
+const isValidImageUrl = computed(() => {
+    const value = form.value.image?.trim()
+
+    if (!value) {
+        return true
+    }
+
+    try {
+        new URL(value)
+        return true
+    } catch {
+        return false
+    }
+})
+
+const imagePreview = computed(() => {
+    const image = form.value.image?.trim()
+
+    return image || null
+})
+
+/*
+|--------------------------------------------------------------------------
+| Categories / Filters
 |--------------------------------------------------------------------------
 */
 
 const filteredServices = computed(() => {
-    let result = [...services.value]
+    const query = searchQuery.value.trim().toLowerCase()
 
-    // Search
-    if (searchQuery.value.trim()) {
-        const query = searchQuery.value.toLowerCase()
+    return services.value.filter((service) => {
+        const matchesSearch =
+            !query ||
+            service.name?.toLowerCase().includes(query) ||
+            service.description?.toLowerCase().includes(query) ||
+            service.duration?.toLowerCase().includes(query)
 
-        result = result.filter((service) => {
-            return (
-                service.name?.toLowerCase().includes(query) ||
-                service.description?.toLowerCase().includes(query)
-            )
-        })
-    }
+        const matchesStatus =
+            statusFilter.value === 'all' ||
+            (statusFilter.value === 'active' && service.is_active) ||
+            (statusFilter.value === 'inactive' && !service.is_active)
 
-    // Status filter
-    if (statusFilter.value === 'active') {
-        result = result.filter((service) => service.is_active)
-    }
-
-    if (statusFilter.value === 'inactive') {
-        result = result.filter((service) => !service.is_active)
-    }
-
-    return result
+        return matchesSearch && matchesStatus
+    })
 })
 
 const activeCount = computed(() => {
-    return services.value.filter((service) => service.is_active).length
+    return services.value.filter(
+        (service) => Boolean(service.is_active)
+    ).length
 })
 
 const inactiveCount = computed(() => {
-    return services.value.filter((service) => !service.is_active).length
+    return services.value.filter(
+        (service) => !service.is_active
+    ).length
 })
-
 
 /*
 |--------------------------------------------------------------------------
@@ -115,75 +174,123 @@ const fetchServices = async () => {
     errorMessage.value = ''
 
     try {
-        const response = await api.get('/services')
+        const response = await api.get('/admin/services')
 
-        services.value = response.data?.data || []
+        services.value = response.data.data || []
     } catch (error) {
-        console.error('Failed to fetch services:', error)
+        console.error('Failed to load services:', error)
 
-        errorMessage.value =
-            error.response?.data?.message ||
-            'Gagal mengambil data services.'
+        errorMessage.value = getApiMessage(
+            error,
+            'Unable to load services right now. Please try again.'
+        )
     } finally {
         loading.value = false
     }
 }
 
-
 /*
 |--------------------------------------------------------------------------
-| Open Add Modal
+| Modal
 |--------------------------------------------------------------------------
 */
 
-const openCreateModal = () => {
-    resetMessages()
+const resetForm = () => {
+    form.value = {
+        name: '',
+        description: '',
+        price: '',
+        duration: '',
+        image: '',
+        is_active: true,
+    }
+
+    editingService.value = null
+    clearValidationErrors()
+}
+
+const openCreateModal = async () => {
+    clearMessages()
     resetForm()
 
     showModal.value = true
+
+    await nextTick()
+    document.body.style.overflow = 'hidden'
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| Open Edit Modal
-|--------------------------------------------------------------------------
-*/
-
-const openEditModal = (service) => {
-    resetMessages()
+const openEditModal = async (service) => {
+    clearMessages()
+    clearValidationErrors()
 
     editingService.value = service
 
     form.value = {
         name: service.name || '',
         description: service.description || '',
-        price: service.price || '',
+        price: service.price ?? '',
         duration: service.duration || '',
         image: service.image || '',
         is_active: Boolean(service.is_active),
     }
 
     showModal.value = true
+
+    await nextTick()
+    document.body.style.overflow = 'hidden'
 }
 
+const closeModal = () => {
+    if (saving.value) {
+        return
+    }
+
+    showModal.value = false
+    editingService.value = null
+    clearValidationErrors()
+
+    document.body.style.overflow = ''
+}
 
 /*
 |--------------------------------------------------------------------------
-| Close Modal
+| Form Validation
 |--------------------------------------------------------------------------
 */
 
-const closeModal = () => {
-    if (saving.value) return
+const validateForm = () => {
+    clearValidationErrors()
 
-    showModal.value = false
+    const errors = {}
 
-    setTimeout(() => {
-        resetForm()
-    }, 200)
+    if (!form.value.name.trim()) {
+        errors.name = ['Service name is required.']
+    }
+
+    if (!form.value.description.trim()) {
+        errors.description = ['Description is required.']
+    }
+
+    if (
+        form.value.price === '' ||
+        form.value.price === null ||
+        normalizeNumber(form.value.price) < 0
+    ) {
+        errors.price = ['Price must be a valid number.']
+    }
+
+    if (!form.value.duration.trim()) {
+        errors.duration = ['Duration is required.']
+    }
+
+    if (!isValidImageUrl.value) {
+        errors.image = ['Image must be a valid URL.']
+    }
+
+    validationErrors.value = errors
+
+    return Object.keys(errors).length === 0
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -192,15 +299,9 @@ const closeModal = () => {
 */
 
 const saveService = async () => {
-    resetMessages()
+    clearMessages()
 
-    if (!form.value.name.trim()) {
-        errorMessage.value = 'Nama service wajib diisi.'
-        return
-    }
-
-    if (!form.value.price) {
-        errorMessage.value = 'Harga service wajib diisi.'
+    if (!validateForm()) {
         return
     }
 
@@ -209,66 +310,73 @@ const saveService = async () => {
     try {
         const payload = {
             name: form.value.name.trim(),
-            description: form.value.description?.trim() || '',
-            price: Number(form.value.price),
-            duration: form.value.duration?.trim() || '',
+            description: form.value.description.trim(),
+            price: normalizeNumber(form.value.price),
+            duration: form.value.duration.trim(),
             image: form.value.image?.trim() || null,
             is_active: Boolean(form.value.is_active),
         }
 
+        let response
+
         if (editingService.value) {
-            const response = await api.put(
-                `/services/${editingService.value.id}`,
+            response = await api.put(
+                `/admin/services/${editingService.value.id}`,
                 payload
             )
+        } else {
+            response = await api.post(
+                '/admin/services',
+                payload
+            )
+        }
 
-            const updatedService =
-                response.data?.data || response.data?.service
+        const savedService = response.data.data
 
-            if (updatedService) {
-                const index = services.value.findIndex(
-                    (service) => service.id === updatedService.id
-                )
+        if (editingService.value) {
+            const index = services.value.findIndex(
+                (service) =>
+                    service.id === editingService.value.id
+            )
 
-                if (index !== -1) {
-                    services.value[index] = updatedService
-                }
+            if (index !== -1 && savedService) {
+                services.value[index] = savedService
             }
 
             successMessage.value =
-                response.data?.message ||
                 'Service berhasil diperbarui.'
         } else {
-            const response = await api.post('/services', payload)
-
-            const newService =
-                response.data?.data || response.data?.service
-
-            if (newService) {
-                services.value.unshift(newService)
+            if (savedService) {
+                services.value.unshift(savedService)
             } else {
                 await fetchServices()
             }
 
             successMessage.value =
-                response.data?.message ||
                 'Service berhasil ditambahkan.'
         }
 
-        showModal.value = false
-        resetForm()
-
+        closeModal()
     } catch (error) {
         console.error('Failed to save service:', error)
 
-        errorMessage.value =
-            error.response?.data?.message ||
-            'Gagal menyimpan service.'
+        if (error?.response?.status === 422) {
+            validationErrors.value =
+                error.response.data.errors || {}
+
+            errorMessage.value =
+                error.response.data.message ||
+                'Please check the form and try again.'
+        } else {
+            errorMessage.value = getApiMessage(
+                error,
+                'Unable to save service right now. Please try again.'
+            )
+        }
     } finally {
         saving.value = false
     }
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -277,90 +385,114 @@ const saveService = async () => {
 */
 
 const deleteService = async (service) => {
+    clearMessages()
+
     const confirmed = window.confirm(
-        `Yakin ingin menghapus service "${service.name}"?`
+        `Are you sure you want to delete "${service.name}"?`
     )
 
-    if (!confirmed) return
+    if (!confirmed) {
+        return
+    }
 
-    resetMessages()
-    deleting.value = true
+    deletingId.value = service.id
 
     try {
-        const response = await api.delete(`/services/${service.id}`)
+        await api.delete(
+            `/admin/services/${service.id}`
+        )
 
         services.value = services.value.filter(
             (item) => item.id !== service.id
         )
 
         successMessage.value =
-            response.data?.message ||
             'Service berhasil dihapus.'
-
     } catch (error) {
         console.error('Failed to delete service:', error)
 
-        errorMessage.value =
-            error.response?.data?.message ||
-            'Gagal menghapus service.'
+        errorMessage.value = getApiMessage(
+            error,
+            'Unable to delete service right now. Please try again.'
+        )
     } finally {
-        deleting.value = false
+        deletingId.value = null
     }
 }
 
-
 /*
 |--------------------------------------------------------------------------
-| Toggle Status
+| Toggle Active Status
 |--------------------------------------------------------------------------
 */
 
 const toggleStatus = async (service) => {
-    resetMessages()
+    clearMessages()
 
-    const newStatus = !service.is_active
+    togglingId.value = service.id
 
     try {
-        const response = await api.put(
-            `/services/${service.id}`,
-            {
-                name: service.name,
-                description: service.description,
-                price: Number(service.price),
-                duration: service.duration,
-                image: service.image,
-                is_active: newStatus,
-            }
-        )
-
-        const updatedService =
-            response.data?.data || response.data?.service
-
-        if (updatedService) {
-            const index = services.value.findIndex(
-                (item) => item.id === updatedService.id
-            )
-
-            if (index !== -1) {
-                services.value[index] = updatedService
-            }
-        } else {
-            service.is_active = newStatus
+        const payload = {
+            name: service.name,
+            description: service.description,
+            price: normalizeNumber(service.price),
+            duration: service.duration,
+            image: service.image || null,
+            is_active: !Boolean(service.is_active),
         }
 
-        successMessage.value = newStatus
-            ? 'Service diaktifkan.'
-            : 'Service dinonaktifkan.'
+        const response = await api.put(
+            `/admin/services/${service.id}`,
+            payload
+        )
 
+        const updatedService = response.data.data
+
+        const index = services.value.findIndex(
+            (item) => item.id === service.id
+        )
+
+        if (index !== -1) {
+            services.value[index] =
+                updatedService || {
+                    ...service,
+                    is_active: !service.is_active,
+                }
+        }
+
+        successMessage.value = service.is_active
+            ? 'Service berhasil dinonaktifkan.'
+            : 'Service berhasil diaktifkan.'
     } catch (error) {
-        console.error('Failed to toggle service:', error)
+        console.error(
+            'Failed to toggle service status:',
+            error
+        )
 
-        errorMessage.value =
-            error.response?.data?.message ||
-            'Gagal mengubah status service.'
+        errorMessage.value = getApiMessage(
+            error,
+            'Unable to update service status right now.'
+        )
+    } finally {
+        togglingId.value = null
     }
 }
 
+/*
+|--------------------------------------------------------------------------
+| Escape Key
+|--------------------------------------------------------------------------
+*/
+
+const handleKeydown = (event) => {
+    if (
+        event.key === 'Escape' &&
+        showModal.value &&
+        !saving.value
+    ) {
+        closeModal()
+    }
+}
 
 /*
 |--------------------------------------------------------------------------
@@ -370,1187 +502,1024 @@ const toggleStatus = async (service) => {
 
 onMounted(() => {
     fetchServices()
+
+    window.addEventListener(
+        'keydown',
+        handleKeydown
+    )
+})
+
+onUnmounted(() => {
+    window.removeEventListener(
+        'keydown',
+        handleKeydown
+    )
+
+    document.body.style.overflow = ''
 })
 </script>
 
-
 <template>
-    <section class="relative">
+    <div class="min-h-screen bg-[#FFF8FA] text-[#191919]">
 
-
-        <!-- ====================================================== -->
-        <!-- PAGE HEADER -->
-        <!-- ====================================================== -->
-
-        <div
-            class="
-                mb-10 flex flex-col gap-6
-                lg:flex-row lg:items-end lg:justify-between
-            "
-        >
-
-            <div>
-
-                <div
-                    class="
-                        mb-5 flex items-center gap-3
-                        text-[9px] uppercase tracking-[0.35em]
-                        text-[#191919]/30
-                    "
-                >
-                    <span class="h-px w-8 bg-[#E85D75]"></span>
-                    Management / 01
-                </div>
-
-                <h2
-                    class="
-                        text-5xl font-medium leading-none
-                        tracking-[-0.06em]
-                        sm:text-6xl
-                    "
-                >
-                    SERVICES<span class="text-[#E85D75]">.</span>
-                </h2>
-
-                <p
-                    class="
-                        mt-5 max-w-xl text-sm leading-6
-                        text-[#191919]/40
-                    "
-                >
-                    Manage the photo editing services offered by
-                    Teras Memori.
-                </p>
-
-            </div>
-
-
-            <!-- Add button -->
-
-            <button
-                type="button"
-                @click="openCreateModal"
-                class="
-                    group inline-flex items-center justify-center
-                    gap-6 bg-[#191919] px-6 py-4
-                    text-[9px] font-semibold uppercase
-                    tracking-[0.25em] text-white
-                    transition duration-500
-                    hover:-translate-y-1
-                    hover:bg-[#E85D75]
-                "
-            >
-                <span>Add service</span>
-
-                <span
-                    class="
-                        text-lg font-normal
-                        transition duration-300
-                        group-hover:translate-x-2
-                    "
-                >
-                    +
-                </span>
-            </button>
-
-        </div>
-
-
-        <!-- ====================================================== -->
-        <!-- ALERTS -->
-        <!-- ====================================================== -->
-
-        <Transition name="fade">
+        <!-- =====================================================
+             HEADER
+        ====================================================== -->
+        <section class="border-b border-[#191919]/10">
 
             <div
-                v-if="successMessage"
-                class="
-                    mb-6 border-l-2 border-[#E85D75]
-                    bg-[#F4A6B8]/10 px-5 py-4
-                "
-            >
-                <div class="flex items-center justify-between gap-4">
-
-                    <p class="text-xs text-[#191919]/60">
-                        {{ successMessage }}
-                    </p>
-
-                    <button
-                        type="button"
-                        class="text-xs text-[#191919]/30 hover:text-[#E85D75]"
-                        @click="successMessage = ''"
-                    >
-                        ×
-                    </button>
-
-                </div>
-            </div>
-
-        </Transition>
-
-
-        <Transition name="fade">
-
-            <div
-                v-if="errorMessage"
-                class="
-                    mb-6 border-l-2 border-red-400
-                    bg-red-50 px-5 py-4
-                "
-            >
-                <div class="flex items-center justify-between gap-4">
-
-                    <p class="text-xs leading-5 text-red-600">
-                        {{ errorMessage }}
-                    </p>
-
-                    <button
-                        type="button"
-                        class="text-xs text-red-400 hover:text-red-600"
-                        @click="errorMessage = ''"
-                    >
-                        ×
-                    </button>
-
-                </div>
-            </div>
-
-        </Transition>
-
-
-        <!-- ====================================================== -->
-        <!-- STATISTICS -->
-        <!-- ====================================================== -->
-
-        <div
-            class="
-                mb-8 grid border border-[#191919]/10
-                bg-white sm:grid-cols-3
-            "
-        >
-
-            <!-- Total -->
-
-            <div
-                class="
-                    border-b border-[#191919]/10
-                    p-6 sm:border-b-0 sm:border-r
-                "
-            >
-                <div
-                    class="
-                        text-[9px] uppercase tracking-[0.3em]
-                        text-[#191919]/30
-                    "
-                >
-                    Total services
-                </div>
-
-                <div
-                    class="
-                        mt-4 text-4xl font-medium
-                        tracking-[-0.05em]
-                    "
-                >
-                    {{ services.length }}
-                </div>
-
-            </div>
-
-
-            <!-- Active -->
-
-            <div
-                class="
-                    border-b border-[#191919]/10
-                    p-6 sm:border-b-0 sm:border-r
-                "
-            >
-                <div
-                    class="
-                        text-[9px] uppercase tracking-[0.3em]
-                        text-[#191919]/30
-                    "
-                >
-                    Active
-                </div>
-
-                <div
-                    class="
-                        mt-4 flex items-center gap-3
-                        text-4xl font-medium
-                        tracking-[-0.05em]
-                    "
-                >
-                    {{ activeCount }}
-
-                    <span
-                        class="
-                            h-2 w-2 rounded-full
-                            bg-[#E85D75]
-                        "
-                    ></span>
-                </div>
-
-            </div>
-
-
-            <!-- Inactive -->
-
-            <div class="p-6">
-
-                <div
-                    class="
-                        text-[9px] uppercase tracking-[0.3em]
-                        text-[#191919]/30
-                    "
-                >
-                    Inactive
-                </div>
-
-                <div
-                    class="
-                        mt-4 text-4xl font-medium
-                        tracking-[-0.05em]
-                    "
-                >
-                    {{ inactiveCount }}
-                </div>
-
-            </div>
-
-        </div>
-
-
-        <!-- ====================================================== -->
-        <!-- FILTER BAR -->
-        <!-- ====================================================== -->
-
-        <div
-            class="
-                mb-6 flex flex-col gap-4
-                lg:flex-row lg:items-center lg:justify-between
-            "
-        >
-
-            <!-- Search -->
-
-            <div class="relative w-full lg:max-w-md">
-
-                <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="1.7"
-                    class="
-                        pointer-events-none absolute left-4
-                        top-1/2 h-4 w-4
-                        -translate-y-1/2 text-[#191919]/25
-                    "
-                >
-                    <circle cx="11" cy="11" r="7"></circle>
-                    <path d="m16 16 4 4"></path>
-                </svg>
-
-                <input
-                    v-model="searchQuery"
-                    type="search"
-                    placeholder="Search services..."
-                    class="
-                        w-full border border-[#191919]/10
-                        bg-white py-3.5 pl-11 pr-4
-                        text-xs outline-none
-                        placeholder:text-[#191919]/25
-                        transition
-                        focus:border-[#E85D75]
-                    "
-                />
-
-            </div>
-
-
-            <!-- Filter -->
-
-            <div
-                class="
-                    flex items-center gap-1
-                    border border-[#191919]/10
-                    bg-white p-1
-                "
-            >
-
-                <button
-                    type="button"
-                    @click="statusFilter = 'all'"
-                    class="
-                        px-4 py-2.5 text-[9px]
-                        uppercase tracking-[0.2em]
-                        transition
-                    "
-                    :class="
-                        statusFilter === 'all'
-                            ? 'bg-[#191919] text-white'
-                            : 'text-[#191919]/40 hover:text-[#191919]'
-                    "
-                >
-                    All
-                </button>
-
-                <button
-                    type="button"
-                    @click="statusFilter = 'active'"
-                    class="
-                        px-4 py-2.5 text-[9px]
-                        uppercase tracking-[0.2em]
-                        transition
-                    "
-                    :class="
-                        statusFilter === 'active'
-                            ? 'bg-[#191919] text-white'
-                            : 'text-[#191919]/40 hover:text-[#191919]'
-                    "
-                >
-                    Active
-                </button>
-
-                <button
-                    type="button"
-                    @click="statusFilter = 'inactive'"
-                    class="
-                        px-4 py-2.5 text-[9px]
-                        uppercase tracking-[0.2em]
-                        transition
-                    "
-                    :class="
-                        statusFilter === 'inactive'
-                            ? 'bg-[#191919] text-white'
-                            : 'text-[#191919]/40 hover:text-[#191919]'
-                    "
-                >
-                    Inactive
-                </button>
-
-            </div>
-
-        </div>
-
-
-        <!-- ====================================================== -->
-        <!-- LOADING -->
-        <!-- ====================================================== -->
-
-        <div
-            v-if="loading"
-            class="
-                border border-[#191919]/10
-                bg-white p-16 text-center
-            "
-        >
-
-            <div
-                class="
-                    mx-auto h-8 w-8 animate-spin rounded-full
-                    border-2 border-[#191919]/10
-                    border-t-[#E85D75]
-                "
-            ></div>
-
-            <p
-                class="
-                    mt-5 text-[9px] uppercase
-                    tracking-[0.3em] text-[#191919]/30
-                "
-            >
-                Loading services
-            </p>
-
-        </div>
-
-
-        <!-- ====================================================== -->
-        <!-- EMPTY -->
-        <!-- ====================================================== -->
-
-        <div
-            v-else-if="filteredServices.length === 0"
-            class="
-                border border-[#191919]/10
-                bg-white px-6 py-20 text-center
-            "
-        >
-
-            <div
-                class="
-                    mx-auto flex h-16 w-16 items-center
-                    justify-center rounded-full
-                    border border-[#E85D75]/20
-                    bg-[#F4A6B8]/10
-                "
-            >
-                <span class="text-2xl text-[#E85D75]">
-                    +
-                </span>
-            </div>
-
-            <h3
-                class="
-                    mt-7 text-xl font-medium
-                    tracking-[-0.03em]
-                "
-            >
-                No services found.
-            </h3>
-
-            <p
-                class="
-                    mx-auto mt-3 max-w-sm
-                    text-sm leading-6 text-[#191919]/35
-                "
-            >
-                There are no services matching your current
-                search or filter.
-            </p>
-
-            <button
-                type="button"
-                @click="openCreateModal"
-                class="
-                    mt-7 inline-flex items-center gap-3
-                    bg-[#191919] px-5 py-3
-                    text-[9px] font-semibold uppercase
-                    tracking-[0.2em] text-white
-                    transition hover:bg-[#E85D75]
-                "
-            >
-                Add first service
-                <span>→</span>
-            </button>
-
-        </div>
-
-
-        <!-- ====================================================== -->
-        <!-- SERVICES TABLE -->
-        <!-- ====================================================== -->
-
-        <div
-            v-else
-            class="
-                overflow-hidden border border-[#191919]/10
-                bg-white
-            "
-        >
-
-            <!-- Desktop header -->
-
-            <div
-                class="
-                    hidden border-b border-[#191919]/10
-                    px-6 py-4 text-[8px]
-                    uppercase tracking-[0.3em]
-                    text-[#191919]/30
-                    md:grid md:grid-cols-[1fr_150px_130px_110px_100px]
-                    md:items-center md:gap-6
-                "
-            >
-                <span>Service</span>
-                <span>Price</span>
-                <span>Duration</span>
-                <span>Status</span>
-                <span class="text-right">Action</span>
-            </div>
-
-
-            <!-- Rows -->
-
-            <div
-                v-for="(service, index) in filteredServices"
-                :key="service.id"
-                class="
-                    group border-b border-[#191919]/10
-                    p-6 last:border-b-0
-                    transition duration-300
-                    hover:bg-[#FFF8FA]
-                "
+                class="mx-auto max-w-[1600px] px-6 py-10 sm:px-10 lg:px-16"
             >
 
                 <div
-                    class="
-                        flex flex-col gap-6
-                        md:grid md:grid-cols-[1fr_150px_130px_110px_100px]
-                        md:items-center md:gap-6
-                    "
+                    class="flex flex-col justify-between gap-8 md:flex-row md:items-end"
                 >
 
-                    <!-- Service -->
-
-                    <div class="flex min-w-0 items-center gap-5">
-
-                        <!-- Number -->
+                    <div>
 
                         <div
-                            class="
-                                hidden shrink-0 text-[9px]
-                                text-[#E85D75]
-                                sm:block
-                            "
+                            class="mb-5 flex items-center gap-3"
                         >
-                            {{ String(index + 1).padStart(2, '0') }}
-                        </div>
-
-
-                        <!-- Image -->
-
-                        <div
-                            class="
-                                flex h-14 w-14 shrink-0
-                                items-center justify-center
-                                overflow-hidden
-                                border border-[#191919]/10
-                                bg-[#F4F0F1]
-                            "
-                        >
-
-                            <img
-                                v-if="service.image"
-                                :src="service.image"
-                                :alt="service.name"
-                                class="h-full w-full object-cover"
-                            />
-
                             <span
-                                v-else
-                                class="
-                                    text-lg font-medium
-                                    text-[#E85D75]/40
-                                "
-                            >
-                                TM
-                            </span>
-
-                        </div>
-
-
-                        <!-- Info -->
-
-                        <div class="min-w-0">
-
-                            <h3
-                                class="
-                                    truncate text-sm font-semibold
-                                    tracking-[-0.02em]
-                                "
-                            >
-                                {{ service.name }}
-                            </h3>
-
-                            <p
-                                class="
-                                    mt-1 line-clamp-2
-                                    max-w-lg text-xs leading-5
-                                    text-[#191919]/35
-                                "
-                            >
-                                {{ service.description || 'No description.' }}
-                            </p>
-
-                        </div>
-
-                    </div>
-
-
-                    <!-- Price -->
-
-                    <div>
-
-                        <div
-                            class="
-                                mb-1 text-[8px] uppercase
-                                tracking-[0.2em]
-                                text-[#191919]/25
-                                md:hidden
-                            "
-                        >
-                            Price
-                        </div>
-
-                        <span class="text-sm font-medium">
-                            Rp {{ formatPrice(service.price) }}
-                        </span>
-
-                    </div>
-
-
-                    <!-- Duration -->
-
-                    <div>
-
-                        <div
-                            class="
-                                mb-1 text-[8px] uppercase
-                                tracking-[0.2em]
-                                text-[#191919]/25
-                                md:hidden
-                            "
-                        >
-                            Duration
-                        </div>
-
-                        <span
-                            class="
-                                text-xs text-[#191919]/50
-                            "
-                        >
-                            {{ service.duration || '—' }}
-                        </span>
-
-                    </div>
-
-
-                    <!-- Status -->
-
-                    <div>
-
-                        <div
-                            class="
-                                mb-1 text-[8px] uppercase
-                                tracking-[0.2em]
-                                text-[#191919]/25
-                                md:hidden
-                            "
-                        >
-                            Status
-                        </div>
-
-                        <button
-                            type="button"
-                            @click="toggleStatus(service)"
-                            class="
-                                inline-flex items-center gap-2
-                                text-[9px] font-medium
-                                uppercase tracking-[0.15em]
-                                transition
-                            "
-                            :class="
-                                service.is_active
-                                    ? 'text-[#E85D75]'
-                                    : 'text-[#191919]/30'
-                            "
-                        >
-
-                            <span
-                                class="
-                                    h-1.5 w-1.5 rounded-full
-                                "
-                                :class="
-                                    service.is_active
-                                        ? 'bg-[#E85D75]'
-                                        : 'bg-[#191919]/20'
-                                "
+                                class="h-px w-10 bg-[#E85D75]"
                             ></span>
 
-                            {{ service.is_active ? 'Active' : 'Inactive' }}
-
-                        </button>
-
-                    </div>
-
-
-                    <!-- Actions -->
-
-                    <div
-                        class="
-                            flex items-center justify-between
-                            gap-2 md:justify-end
-                        "
-                    >
-
-                        <button
-                            type="button"
-                            @click="openEditModal(service)"
-                            class="
-                                border border-[#191919]/10
-                                px-3 py-2 text-[9px]
-                                uppercase tracking-[0.15em]
-                                text-[#191919]/45
-                                transition
-                                hover:border-[#E85D75]
-                                hover:text-[#E85D75]
-                            "
-                        >
-                            Edit
-                        </button>
-
-                        <button
-                            type="button"
-                            :disabled="deleting"
-                            @click="deleteService(service)"
-                            class="
-                                flex h-8 w-8 items-center
-                                justify-center
-                                text-[#191919]/25
-                                transition
-                                hover:bg-red-50
-                                hover:text-red-500
-                                disabled:opacity-40
-                            "
-                            title="Delete"
-                        >
-                            <svg
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="1.7"
-                                class="h-4 w-4"
+                            <span
+                                class="text-[9px] uppercase tracking-[0.35em] text-[#191919]/35"
                             >
-                                <path d="M4 7h16" />
-                                <path d="M10 11v6M14 11v6" />
-                                <path
-                                    d="M6 7l1 14h10l1-14"
-                                />
-                                <path
-                                    d="M9 7V4h6v3"
-                                />
-                            </svg>
-                        </button>
+                                Studio Management
+                            </span>
+                        </div>
+
+                        <h1
+                            class="text-5xl font-medium tracking-[-0.06em] sm:text-6xl md:text-7xl"
+                        >
+                            Services
+                        </h1>
+
+                        <p
+                            class="mt-4 max-w-xl text-sm leading-6 text-[#191919]/40"
+                        >
+                            Kelola layanan editing yang tersedia
+                            untuk customer Teras Memori.
+                        </p>
 
                     </div>
+
+
+                    <!-- Add Button -->
+                    <button
+                        type="button"
+                        @click="openCreateModal"
+                        class="inline-flex items-center justify-center gap-4 rounded-full bg-[#191919] px-7 py-4 text-[10px] font-semibold uppercase tracking-[0.2em] text-white transition duration-300 hover:bg-[#E85D75]"
+                    >
+                        <span class="text-lg leading-none">
+                            +
+                        </span>
+
+                        Add Service
+                    </button>
 
                 </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =====================================================
+             ALERTS
+        ====================================================== -->
+        <div
+            v-if="errorMessage || successMessage"
+            class="mx-auto max-w-[1600px] px-6 pt-6 sm:px-10 lg:px-16"
+        >
+
+            <!-- Error -->
+            <div
+                v-if="errorMessage"
+                class="flex items-start justify-between gap-5 border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-700"
+            >
+
+                <p>
+                    {{ errorMessage }}
+                </p>
+
+                <button
+                    type="button"
+                    class="text-lg leading-none text-red-400 hover:text-red-700"
+                    @click="errorMessage = ''"
+                    aria-label="Close error"
+                >
+                    ×
+                </button>
+
+            </div>
+
+
+            <!-- Success -->
+            <div
+                v-if="successMessage"
+                class="mt-3 flex items-start justify-between gap-5 border border-[#E85D75]/20 bg-[#E85D75]/5 px-5 py-4 text-sm text-[#191919]/70"
+            >
+
+                <p>
+                    {{ successMessage }}
+                </p>
+
+                <button
+                    type="button"
+                    class="text-lg leading-none text-[#191919]/30 hover:text-[#191919]"
+                    @click="successMessage = ''"
+                    aria-label="Close success"
+                >
+                    ×
+                </button>
 
             </div>
 
         </div>
 
 
-        <!-- ====================================================== -->
-        <!-- RESULT COUNT -->
-        <!-- ====================================================== -->
+        <!-- =====================================================
+             STATS
+        ====================================================== -->
+        <section>
 
-        <div
-            v-if="!loading && filteredServices.length > 0"
-            class="
-                mt-5 flex items-center justify-between
-                text-[9px] uppercase tracking-[0.25em]
-                text-[#191919]/25
-            "
-        >
-            <span>
-                Showing {{ filteredServices.length }}
-                of {{ services.length }} services
-            </span>
+            <div
+                class="mx-auto grid max-w-[1600px] gap-px border-b border-[#191919]/10 bg-[#191919]/10 sm:grid-cols-3"
+            >
 
-            <span>
-                Teras Memori / Services
-            </span>
-        </div>
+                <!-- Total -->
+                <div
+                    class="bg-[#FFF8FA] px-6 py-8 sm:px-10 lg:px-16"
+                >
+
+                    <span
+                        class="text-[9px] uppercase tracking-[0.3em] text-[#191919]/30"
+                    >
+                        Total services
+                    </span>
+
+                    <div
+                        class="mt-3 text-4xl font-medium tracking-[-0.05em]"
+                    >
+                        {{ services.length }}
+                    </div>
+
+                </div>
 
 
-        <!-- ====================================================== -->
-        <!-- MODAL -->
-        <!-- ====================================================== -->
+                <!-- Active -->
+                <div
+                    class="bg-[#FFF8FA] px-6 py-8 sm:px-10 lg:px-16"
+                >
 
+                    <span
+                        class="text-[9px] uppercase tracking-[0.3em] text-[#191919]/30"
+                    >
+                        Active
+                    </span>
+
+                    <div
+                        class="mt-3 text-4xl font-medium tracking-[-0.05em] text-[#E85D75]"
+                    >
+                        {{ activeCount }}
+                    </div>
+
+                </div>
+
+
+                <!-- Inactive -->
+                <div
+                    class="bg-[#FFF8FA] px-6 py-8 sm:px-10 lg:px-16"
+                >
+
+                    <span
+                        class="text-[9px] uppercase tracking-[0.3em] text-[#191919]/30"
+                    >
+                        Inactive
+                    </span>
+
+                    <div
+                        class="mt-3 text-4xl font-medium tracking-[-0.05em] text-[#191919]/35"
+                    >
+                        {{ inactiveCount }}
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =====================================================
+             FILTER
+        ====================================================== -->
+        <section class="border-b border-[#191919]/10">
+
+            <div
+                class="mx-auto flex max-w-[1600px] flex-col gap-5 px-6 py-6 sm:px-10 md:flex-row md:items-center md:justify-between lg:px-16"
+            >
+
+                <!-- Search -->
+                <div class="relative w-full md:max-w-md">
+
+                    <span
+                        class="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-sm text-[#191919]/30"
+                    >
+                        ⌕
+                    </span>
+
+                    <input
+                        v-model="searchQuery"
+                        type="search"
+                        placeholder="Search services..."
+                        class="w-full rounded-full border border-[#191919]/10 bg-white px-11 py-3 text-sm outline-none transition placeholder:text-[#191919]/25 focus:border-[#E85D75]/50"
+                    />
+
+                </div>
+
+
+                <!-- Status Filter -->
+                <div
+                    class="flex flex-wrap gap-2"
+                >
+
+                    <button
+                        v-for="filter in [
+                            { value: 'all', label: 'All' },
+                            { value: 'active', label: 'Active' },
+                            { value: 'inactive', label: 'Inactive' },
+                        ]"
+                        :key="filter.value"
+                        type="button"
+                        @click="statusFilter = filter.value"
+                        class="rounded-full border px-5 py-2.5 text-[9px] uppercase tracking-[0.25em] transition duration-300"
+                        :class="
+                            statusFilter === filter.value
+                                ? 'border-[#191919] bg-[#191919] text-white'
+                                : 'border-[#191919]/10 text-[#191919]/40 hover:border-[#E85D75]/50 hover:text-[#E85D75]'
+                        "
+                    >
+                        {{ filter.label }}
+                    </button>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =====================================================
+             SERVICES TABLE
+        ====================================================== -->
+        <section>
+
+            <div
+                class="mx-auto max-w-[1600px] px-6 py-10 sm:px-10 lg:px-16"
+            >
+
+                <!-- Loading -->
+                <div
+                    v-if="loading"
+                    class="overflow-hidden border border-[#191919]/10 bg-white"
+                >
+
+                    <div
+                        v-for="item in 5"
+                        :key="item"
+                        class="animate-pulse border-b border-[#191919]/5 p-6 last:border-b-0"
+                    >
+
+                        <div
+                            class="flex items-center gap-5"
+                        >
+
+                            <div
+                                class="h-12 w-12 bg-[#191919]/5"
+                            ></div>
+
+                            <div class="flex-1">
+
+                                <div
+                                    class="h-4 w-48 bg-[#191919]/5"
+                                ></div>
+
+                                <div
+                                    class="mt-3 h-3 w-72 max-w-full bg-[#191919]/5"
+                                ></div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- Error / Retry -->
+                <div
+                    v-else-if="errorMessage && services.length === 0"
+                    class="border-y border-[#191919]/10 py-20 text-center"
+                >
+
+                    <p
+                        class="text-sm text-[#191919]/45"
+                    >
+                        Unable to load services.
+                    </p>
+
+                    <button
+                        type="button"
+                        @click="fetchServices"
+                        class="mt-6 rounded-full border border-[#191919]/15 px-6 py-3 text-[10px] uppercase tracking-[0.2em] transition hover:border-[#191919]/40 hover:bg-[#191919]/5"
+                    >
+                        Try again
+                    </button>
+
+                </div>
+
+
+                <!-- Empty -->
+                <div
+                    v-else-if="filteredServices.length === 0"
+                    class="border-y border-[#191919]/10 py-20 text-center"
+                >
+
+                    <p
+                        class="text-sm text-[#191919]/40"
+                    >
+                        No services found.
+                    </p>
+
+                    <button
+                        v-if="searchQuery || statusFilter !== 'all'"
+                        type="button"
+                        @click="searchQuery = ''; statusFilter = 'all'"
+                        class="mt-5 text-[9px] uppercase tracking-[0.25em] text-[#E85D75] hover:underline">
+                        Clear filters
+                    </button>
+
+                </div>
+
+
+                <!-- Table -->
+                <div
+                    v-else
+                    class="overflow-x-auto border border-[#191919]/10 bg-white"
+                >
+
+                    <table
+                        class="w-full min-w-[900px] border-collapse"
+                    >
+
+                        <thead>
+
+                            <tr
+                                class="border-b border-[#191919]/10 bg-[#191919]/[0.025]"
+                            >
+
+                                <th
+                                    class="w-20 px-6 py-5 text-left text-[9px] font-medium uppercase tracking-[0.25em] text-[#191919]/30"
+                                >
+                                    #
+                                </th>
+
+                                <th
+                                    class="px-6 py-5 text-left text-[9px] font-medium uppercase tracking-[0.25em] text-[#191919]/30"
+                                >
+                                    Service
+                                </th>
+
+                                <th
+                                    class="px-6 py-5 text-left text-[9px] font-medium uppercase tracking-[0.25em] text-[#191919]/30"
+                                >
+                                    Price
+                                </th>
+
+                                <th
+                                    class="px-6 py-5 text-left text-[9px] font-medium uppercase tracking-[0.25em] text-[#191919]/30"
+                                >
+                                    Duration
+                                </th>
+
+                                <th
+                                    class="px-6 py-5 text-left text-[9px] font-medium uppercase tracking-[0.25em] text-[#191919]/30"
+                                >
+                                    Status
+                                </th>
+
+                                <th
+                                    class="px-6 py-5 text-right text-[9px] font-medium uppercase tracking-[0.25em] text-[#191919]/30"
+                                >
+                                    Action
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+
+                        <tbody>
+
+                            <tr
+                                v-for="(service, index) in filteredServices"
+                                :key="service.id"
+                                class="group border-b border-[#191919]/5 transition duration-300 hover:bg-[#FFF8FA] last:border-b-0"
+                            >
+
+                                <!-- Number -->
+                                <td
+                                    class="px-6 py-6 align-top"
+                                >
+
+                                    <span
+                                        class="text-[10px] tracking-[0.2em] text-[#191919]/25"
+                                    >
+                                        {{ String(index + 1).padStart(2, '0') }}
+                                    </span>
+
+                                </td>
+
+
+                                <!-- Service -->
+                                <td
+                                    class="px-6 py-6"
+                                >
+
+                                    <div
+                                        class="flex items-center gap-5"
+                                    >
+
+                                        <!-- Image -->
+                                        <div
+                                            class="relative h-16 w-16 shrink-0 overflow-hidden bg-[#F4F0F1]"
+                                        >
+
+                                            <img
+                                                v-if="service.image"
+                                                :src="service.image"
+                                                :alt="service.name"
+                                                class="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                                                loading="lazy"
+                                            />
+
+                                            <div
+                                                v-else
+                                                class="flex h-full w-full items-center justify-center"
+                                            >
+
+                                                <span
+                                                    class="text-[8px] uppercase tracking-[0.2em] text-[#191919]/20"
+                                                >
+                                                    TM
+                                                </span>
+
+                                            </div>
+
+                                        </div>
+
+
+                                        <!-- Text -->
+                                        <div class="min-w-0">
+
+                                            <h2
+                                                class="text-base font-medium tracking-[-0.02em] text-[#191919]/80"
+                                            >
+                                                {{ service.name }}
+                                            </h2>
+
+                                            <p
+                                                v-if="service.description"
+                                                class="mt-1 max-w-xl truncate text-xs text-[#191919]/35"
+                                            >
+                                                {{ service.description }}
+                                            </p>
+
+                                        </div>
+
+                                    </div>
+
+                                </td>
+
+
+                                <!-- Price -->
+                                <td
+                                    class="whitespace-nowrap px-6 py-6 align-middle"
+                                >
+
+                                    <span
+                                        class="text-sm font-medium text-[#191919]/70"
+                                    >
+                                        {{ formatPrice(service.price) }}
+                                    </span>
+
+                                </td>
+
+
+                                <!-- Duration -->
+                                <td
+                                    class="px-6 py-6 align-middle"
+                                >
+
+                                    <span
+                                        class="text-xs text-[#191919]/45"
+                                    >
+                                        {{ service.duration || '—' }}
+                                    </span>
+
+                                </td>
+
+
+                                <!-- Status -->
+                                <td
+                                    class="px-6 py-6 align-middle"
+                                >
+
+                                    <button
+                                        type="button"
+                                        @click="toggleStatus(service)"
+                                        :disabled="
+                                            togglingId === service.id
+                                        "
+                                        class="inline-flex items-center gap-2 rounded-full border px-3 py-2 text-[9px] uppercase tracking-[0.18em] transition duration-300 disabled:cursor-not-allowed disabled:opacity-50"
+                                        :class="
+                                            service.is_active
+                                                ? 'border-[#E85D75]/20 bg-[#E85D75]/5 text-[#E85D75] hover:border-[#E85D75]/40'
+                                                : 'border-[#191919]/10 bg-[#191919]/[0.03] text-[#191919]/35 hover:border-[#191919]/25'
+                                        "
+                                    >
+
+                                        <span
+                                            class="h-1.5 w-1.5 rounded-full"
+                                            :class="
+                                                service.is_active
+                                                    ? 'bg-[#E85D75]'
+                                                    : 'bg-[#191919]/20'
+                                            "
+                                        ></span>
+
+                                        {{
+                                            togglingId === service.id
+                                                ? 'Updating...'
+                                                : service.is_active
+                                                    ? 'Active'
+                                                    : 'Inactive'
+                                        }}
+
+                                    </button>
+
+                                </td>
+
+
+                                <!-- Action -->
+                                <td
+                                    class="px-6 py-6 text-right align-middle"
+                                >
+
+                                    <div
+                                        class="flex items-center justify-end gap-2"
+                                    >
+
+                                        <!-- Edit -->
+                                        <button
+                                            type="button"
+                                            @click="
+                                                openEditModal(service)
+                                            "
+                                            class="rounded-full border border-[#191919]/10 px-4 py-2.5 text-[9px] uppercase tracking-[0.18em] text-[#191919]/45 transition duration-300 hover:border-[#191919]/25 hover:bg-[#191919]/5 hover:text-[#191919]"
+                                        >
+                                            Edit
+                                        </button>
+
+
+                                        <!-- Delete -->
+                                        <button
+                                            type="button"
+                                            @click="
+                                                deleteService(service)
+                                            "
+                                            :disabled="
+                                                deletingId === service.id
+                                            "
+                                            class="rounded-full border border-red-200 px-4 py-2.5 text-[9px] uppercase tracking-[0.18em] text-red-500 transition duration-300 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+                                        >
+                                            {{
+                                                deletingId === service.id
+                                                    ? 'Deleting...'
+                                                    : 'Delete'
+                                            }}
+                                        </button>
+
+                                    </div>
+
+                                </td>
+
+                            </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+
+                <!-- Count -->
+                <div
+                    v-if="!loading && filteredServices.length > 0"
+                    class="mt-5 flex justify-between text-[9px] uppercase tracking-[0.25em] text-[#191919]/25"
+                >
+
+                    <span>
+                        Showing {{ filteredServices.length }}
+                        of {{ services.length }} services
+                    </span>
+
+                    <span>
+                        Teras Memori Studio
+                    </span>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =====================================================
+             MODAL
+        ====================================================== -->
         <Transition name="modal">
 
             <div
                 v-if="showModal"
-                class="
-                    fixed inset-0 z-[100]
-                    flex items-center justify-center
-                    bg-[#191919]/40 p-5
-                    backdrop-blur-sm
-                "
+                class="fixed inset-0 z-[100] overflow-y-auto bg-[#191919]/70 px-4 py-6 backdrop-blur-md sm:px-8 sm:py-10"
                 @click.self="closeModal"
             >
 
                 <div
-                    class="
-                        max-h-[90vh] w-full max-w-2xl
-                        overflow-y-auto
-                        bg-[#FFF8FA]
-                        shadow-2xl
-                    "
+                    class="mx-auto flex min-h-full max-w-3xl items-center justify-center"
                 >
 
-                    <!-- Modal header -->
-
                     <div
-                        class="
-                            flex items-center justify-between
-                            border-b border-[#191919]/10
-                            px-7 py-6 sm:px-9
-                        "
+                        class="relative w-full overflow-hidden rounded-[1.5rem] bg-[#FFF8FA] shadow-2xl"
                     >
 
-                        <div>
-
-                            <div
-                                class="
-                                    text-[8px] uppercase
-                                    tracking-[0.3em]
-                                    text-[#191919]/30
-                                "
-                            >
-                                Services / {{ editingService ? 'Edit' : 'New' }}
-                            </div>
-
-                            <h3
-                                class="
-                                    mt-2 text-2xl font-medium
-                                    tracking-[-0.04em]
-                                "
-                            >
-                                {{ editingService ? 'Edit service' : 'Add service' }}
-                            </h3>
-
-                        </div>
-
-
-                        <button
-                            type="button"
-                            @click="closeModal"
-                            class="
-                                flex h-9 w-9 items-center
-                                justify-center rounded-full
-                                border border-[#191919]/10
-                                text-[#191919]/40
-                                transition
-                                hover:border-[#E85D75]
-                                hover:text-[#E85D75]
-                            "
-                        >
-                            ×
-                        </button>
-
-                    </div>
-
-
-                    <!-- Form -->
-
-                    <form
-                        @submit.prevent="saveService"
-                        class="space-y-6 px-7 py-8 sm:px-9"
-                    >
-
-                        <!-- Name -->
-
-                        <div>
-
-                            <label
-                                for="service-name"
-                                class="
-                                    mb-3 block text-[8px]
-                                    font-semibold uppercase
-                                    tracking-[0.3em]
-                                    text-[#191919]/35
-                                "
-                            >
-                                Service name
-                            </label>
-
-                            <input
-                                id="service-name"
-                                v-model="form.name"
-                                type="text"
-                                placeholder="Photo Editing"
-                                required
-                                class="
-                                    w-full border-0 border-b
-                                    border-[#191919]/15
-                                    bg-transparent px-0 py-3
-                                    text-sm outline-none
-                                    transition
-                                    placeholder:text-[#191919]/20
-                                    focus:border-[#E85D75]
-                                "
-                            />
-
-                        </div>
-
-
-                        <!-- Description -->
-
-                        <div>
-
-                            <label
-                                for="service-description"
-                                class="
-                                    mb-3 block text-[8px]
-                                    font-semibold uppercase
-                                    tracking-[0.3em]
-                                    text-[#191919]/35
-                                "
-                            >
-                                Description
-                            </label>
-
-                            <textarea
-                                id="service-description"
-                                v-model="form.description"
-                                rows="4"
-                                placeholder="Describe this service..."
-                                class="
-                                    w-full resize-none
-                                    border border-[#191919]/10
-                                    bg-white px-4 py-3
-                                    text-sm outline-none
-                                    transition
-                                    placeholder:text-[#191919]/20
-                                    focus:border-[#E85D75]
-                                "
-                            ></textarea>
-
-                        </div>
-
-
-                        <!-- Price + Duration -->
-
-                        <div class="grid gap-6 sm:grid-cols-2">
-
-                            <!-- Price -->
-
-                            <div>
-
-                                <label
-                                    for="service-price"
-                                    class="
-                                        mb-3 block text-[8px]
-                                        font-semibold uppercase
-                                        tracking-[0.3em]
-                                        text-[#191919]/35
-                                    "
-                                >
-                                    Price
-                                </label>
-
-                                <div class="relative">
-
-                                    <span
-                                        class="
-                                            absolute left-0 top-1/2
-                                            -translate-y-1/2
-                                            text-xs text-[#191919]/30
-                                        "
-                                    >
-                                        Rp
-                                    </span>
-
-                                    <input
-                                        id="service-price"
-                                        v-model="form.price"
-                                        type="number"
-                                        min="0"
-                                        step="1000"
-                                        placeholder="50000"
-                                        required
-                                        class="
-                                            w-full border-0 border-b
-                                            border-[#191919]/15
-                                            bg-transparent
-                                            py-3 pl-7 pr-0
-                                            text-sm outline-none
-                                            transition
-                                            placeholder:text-[#191919]/20
-                                            focus:border-[#E85D75]
-                                        "
-                                    />
-
-                                </div>
-
-                            </div>
-
-
-                            <!-- Duration -->
-
-                            <div>
-
-                                <label
-                                    for="service-duration"
-                                    class="
-                                        mb-3 block text-[8px]
-                                        font-semibold uppercase
-                                        tracking-[0.3em]
-                                        text-[#191919]/35
-                                    "
-                                >
-                                    Duration
-                                </label>
-
-                                <input
-                                    id="service-duration"
-                                    v-model="form.duration"
-                                    type="text"
-                                    placeholder="1-2 Days"
-                                    class="
-                                        w-full border-0 border-b
-                                        border-[#191919]/15
-                                        bg-transparent px-0 py-3
-                                        text-sm outline-none
-                                        transition
-                                        placeholder:text-[#191919]/20
-                                        focus:border-[#E85D75]
-                                    "
-                                />
-
-                            </div>
-
-                        </div>
-
-
-                        <!-- Image -->
-
-                        <div>
-
-                            <label
-                                for="service-image"
-                                class="
-                                    mb-3 block text-[8px]
-                                    font-semibold uppercase
-                                    tracking-[0.3em]
-                                    text-[#191919]/35
-                                "
-                            >
-                                Image URL
-                            </label>
-
-                            <input
-                                id="service-image"
-                                v-model="form.image"
-                                type="url"
-                                placeholder="https://..."
-                                class="
-                                    w-full border-0 border-b
-                                    border-[#191919]/15
-                                    bg-transparent px-0 py-3
-                                    text-sm outline-none
-                                    transition
-                                    placeholder:text-[#191919]/20
-                                    focus:border-[#E85D75]
-                                "
-                            />
-
-                        </div>
-
-
-                        <!-- Active -->
-
-                        <label
-                            class="
-                                flex cursor-pointer items-center
-                                justify-between border
-                                border-[#191919]/10 bg-white
-                                px-5 py-4
-                            "
-                        >
-
-                            <div>
-
-                                <div class="text-xs font-medium">
-                                    Active service
-                                </div>
-
-                                <div
-                                    class="
-                                        mt-1 text-[9px]
-                                        text-[#191919]/30
-                                    "
-                                >
-                                    Customers can see this service
-                                </div>
-
-                            </div>
-
-                            <input
-                                v-model="form.is_active"
-                                type="checkbox"
-                                class="sr-only"
-                            />
-
-                            <div
-                                class="
-                                    relative h-6 w-11
-                                    rounded-full
-                                    transition
-                                "
-                                :class="
-                                    form.is_active
-                                        ? 'bg-[#E85D75]'
-                                        : 'bg-[#191919]/15'
-                                "
-                            >
-                                <span
-                                    class="
-                                        absolute top-1 h-4 w-4
-                                        rounded-full bg-white
-                                        shadow-sm transition
-                                    "
-                                    :class="
-                                        form.is_active
-                                            ? 'left-6'
-                                            : 'left-1'
-                                    "
-                                ></span>
-                            </div>
-
-                        </label>
-
-
-                        <!-- Buttons -->
-
+                        <!-- Modal Header -->
                         <div
-                            class="
-                                flex flex-col-reverse gap-3
-                                border-t border-[#191919]/10
-                                pt-7 sm:flex-row sm:justify-end
-                            "
+                            class="flex items-start justify-between gap-6 border-b border-[#191919]/10 px-6 py-6 sm:px-8"
                         >
 
+                            <div>
+
+                                <span
+                                    class="text-[9px] uppercase tracking-[0.35em] text-[#191919]/30"
+                                >
+                                    {{
+                                        editingService
+                                            ? 'Edit service'
+                                            : 'New service'
+                                    }}
+                                </span>
+
+                                <h2
+                                    class="mt-2 text-2xl font-medium tracking-[-0.04em]"
+                                >
+                                    {{
+                                        editingService
+                                            ? 'Update Service'
+                                            : 'Create Service'
+                                    }}
+                                </h2>
+
+                            </div>
+
+
+                            <!-- Close -->
                             <button
                                 type="button"
                                 @click="closeModal"
-                                class="
-                                    px-5 py-3 text-[9px]
-                                    uppercase tracking-[0.2em]
-                                    text-[#191919]/40
-                                    transition
-                                    hover:text-[#191919]
-                                "
+                                :disabled="saving"
+                                class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#191919]/10 text-xl text-[#191919]/40 transition hover:border-[#191919]/25 hover:text-[#191919] disabled:cursor-not-allowed disabled:opacity-40"
+                                aria-label="Close"
                             >
-                                Cancel
+                                ×
                             </button>
 
-                            <button
-                                type="submit"
-                                :disabled="saving"
-                                class="
-                                    inline-flex items-center
-                                    justify-center gap-5
-                                    bg-[#191919] px-6 py-4
-                                    text-[9px] font-semibold
-                                    uppercase tracking-[0.2em]
-                                    text-white
-                                    transition duration-300
-                                    hover:bg-[#E85D75]
-                                    disabled:cursor-not-allowed
-                                    disabled:opacity-50
-                                "
+                        </div>
+
+
+                        <!-- Form -->
+                        <form
+                            @submit.prevent="saveService"
+                            class="px-6 py-7 sm:px-8"
+                        >
+
+                            <div class="grid gap-6">
+
+                                <!-- Name -->
+                                <div>
+
+                                    <label
+                                        class="text-[9px] uppercase tracking-[0.25em] text-[#191919]/40"
+                                    >
+                                        Service name
+                                    </label>
+
+                                    <input
+                                        v-model="form.name"
+                                        type="text"
+                                        maxlength="255"
+                                        placeholder="e.g. Photo Editing"
+                                        class="mt-2 w-full border-0 border-b bg-transparent px-0 py-3 text-base outline-none transition placeholder:text-[#191919]/20"
+                                        :class="
+                                            getFieldError('name')
+                                                ? 'border-red-400'
+                                                : 'border-[#191919]/10 focus:border-[#E85D75]'
+                                        "
+                                    />
+
+                                    <p
+                                        v-if="getFieldError('name')"
+                                        class="mt-2 text-xs text-red-500"
+                                    >
+                                        {{ getFieldError('name') }}
+                                    </p>
+
+                                </div>
+
+
+                                <!-- Description -->
+                                <div>
+
+                                    <label
+                                        class="text-[9px] uppercase tracking-[0.25em] text-[#191919]/40"
+                                    >
+                                        Description
+                                    </label>
+
+                                    <textarea
+                                        v-model="form.description"
+                                        rows="4"
+                                        maxlength="2000"
+                                        placeholder="Describe this service..."
+                                        class="mt-2 w-full resize-none border border-[#191919]/10 bg-white px-4 py-3 text-sm leading-6 outline-none transition placeholder:text-[#191919]/20 focus:border-[#E85D75]"
+                                        :class="
+                                            getFieldError('description')
+                                                ? 'border-red-400'
+                                                : ''
+                                        "
+                                    ></textarea>
+
+                                    <p
+                                        v-if="
+                                            getFieldError(
+                                                'description'
+                                            )
+                                        "
+                                        class="mt-2 text-xs text-red-500"
+                                    >
+                                        {{
+                                            getFieldError(
+                                                'description'
+                                            )
+                                        }}
+                                    </p>
+
+                                </div>
+
+
+                                <!-- Price + Duration -->
+                                <div
+                                    class="grid gap-6 sm:grid-cols-2"
+                                >
+
+                                    <!-- Price -->
+                                    <div>
+
+                                        <label
+                                            class="text-[9px] uppercase tracking-[0.25em] text-[#191919]/40"
+                                        >
+                                            Price
+                                        </label>
+
+                                        <div
+                                            class="mt-2 flex items-center border-b border-[#191919]/10"
+                                            :class="
+                                                getFieldError('price')
+                                                    ? 'border-red-400'
+                                                    : 'focus-within:border-[#E85D75]'
+                                            "
+                                        >
+
+                                            <span
+                                                class="text-sm text-[#191919]/35"
+                                            >
+                                                Rp
+                                            </span>
+
+                                            <input
+                                                v-model="form.price"
+                                                type="number"
+                                                min="0"
+                                                step="1"
+                                                placeholder="50000"
+                                                class="w-full bg-transparent px-2 py-3 text-base outline-none placeholder:text-[#191919]/20"
+                                            />
+
+                                        </div>
+
+                                        <p
+                                            v-if="getFieldError('price')"
+                                            class="mt-2 text-xs text-red-500"
+                                        >
+                                            {{ getFieldError('price') }}
+                                        </p>
+
+                                    </div>
+
+
+                                    <!-- Duration -->
+                                    <div>
+
+                                        <label
+                                            class="text-[9px] uppercase tracking-[0.25em] text-[#191919]/40"
+                                        >
+                                            Duration
+                                        </label>
+
+                                        <input
+                                            v-model="form.duration"
+                                            type="text"
+                                            maxlength="100"
+                                            placeholder="1-2 Days"
+                                            class="mt-2 w-full border-0 border-b bg-transparent px-0 py-3 text-base outline-none transition placeholder:text-[#191919]/20"
+                                            :class="
+                                                getFieldError('duration')
+                                                    ? 'border-red-400'
+                                                    : 'border-[#191919]/10 focus:border-[#E85D75]'
+                                            "
+                                        />
+
+                                        <p
+                                            v-if="
+                                                getFieldError(
+                                                    'duration'
+                                                )
+                                            "
+                                            class="mt-2 text-xs text-red-500"
+                                        >
+                                            {{
+                                                getFieldError(
+                                                    'duration'
+                                                )
+                                            }}
+                                        </p>
+
+                                    </div>
+
+                                </div>
+
+
+                                <!-- Image URL -->
+                                <div>
+
+                                    <label
+                                        class="text-[9px] uppercase tracking-[0.25em] text-[#191919]/40"
+                                    >
+                                        Image URL
+                                    </label>
+
+                                    <input
+                                        v-model="form.image"
+                                        type="url"
+                                        placeholder="https://..."
+                                        class="mt-2 w-full border-0 border-b bg-transparent px-0 py-3 text-sm outline-none transition placeholder:text-[#191919]/20"
+                                        :class="
+                                            getFieldError('image')
+                                                ? 'border-red-400'
+                                                : 'border-[#191919]/10 focus:border-[#E85D75]'
+                                        "
+                                    />
+
+                                    <p
+                                        v-if="getFieldError('image')"
+                                        class="mt-2 text-xs text-red-500"
+                                    >
+                                        {{ getFieldError('image') }}
+                                    </p>
+
+
+                                    <!-- Preview -->
+                                    <div
+                                        v-if="imagePreview"
+                                        class="mt-4 overflow-hidden border border-[#191919]/10 bg-[#F4F0F1]"
+                                    >
+
+                                        <img
+                                            :src="imagePreview"
+                                            alt="Image preview"
+                                            class="max-h-64 w-full object-contain"
+                                        />
+
+                                    </div>
+
+                                </div>
+
+
+                                <!-- Status -->
+                                <div
+                                    class="flex items-center justify-between border-y border-[#191919]/10 py-5"
+                                >
+
+                                    <div>
+
+                                        <p
+                                            class="text-[9px] uppercase tracking-[0.25em] text-[#191919]/40"
+                                        >
+                                            Service status
+                                        </p>
+
+                                        <p
+                                            class="mt-1 text-sm text-[#191919]/45"
+                                        >
+                                            Inactive services won't be
+                                            available for new orders.
+                                        </p>
+
+                                    </div>
+
+
+                                    <button
+                                        type="button"
+                                        @click="
+                                            form.is_active =
+                                                !form.is_active
+                                        "
+                                        class="relative h-7 w-12 shrink-0 rounded-full transition duration-300"
+                                        :class="
+                                            form.is_active
+                                                ? 'bg-[#E85D75]'
+                                                : 'bg-[#191919]/15'
+                                        "
+                                        :aria-pressed="
+                                            form.is_active
+                                        "
+                                    >
+
+                                        <span
+                                            class="absolute top-1 h-5 w-5 rounded-full bg-white shadow transition duration-300"
+                                            :class="
+                                                form.is_active
+                                                    ? 'left-6'
+                                                    : 'left-1'
+                                            "
+                                        ></span>
+
+                                    </button>
+
+                                </div>
+
+                            </div>
+
+
+                            <!-- Footer -->
+                            <div
+                                class="mt-8 flex flex-col-reverse gap-3 border-t border-[#191919]/10 pt-6 sm:flex-row sm:justify-end"
                             >
-                                <span>
+
+                                <button
+                                    type="button"
+                                    @click="closeModal"
+                                    :disabled="saving"
+                                    class="rounded-full border border-[#191919]/10 px-6 py-3 text-[9px] uppercase tracking-[0.2em] text-[#191919]/45 transition hover:border-[#191919]/25 hover:text-[#191919] disabled:cursor-not-allowed disabled:opacity-40"
+                                >
+                                    Cancel
+                                </button>
+
+                                <button
+                                    type="submit"
+                                    :disabled="saving"
+                                    class="rounded-full bg-[#191919] px-7 py-3 text-[9px] font-semibold uppercase tracking-[0.2em] text-white transition duration-300 hover:bg-[#E85D75] disabled:cursor-not-allowed disabled:opacity-50"
+                                >
                                     {{
                                         saving
                                             ? 'Saving...'
                                             : editingService
-                                                ? 'Update service'
-                                                : 'Create service'
+                                                ? 'Update Service'
+                                                : 'Create Service'
                                     }}
-                                </span>
+                                </button>
 
-                                <span v-if="!saving">→</span>
-                            </button>
+                            </div>
 
-                        </div>
+                        </form>
 
-                    </form>
+                    </div>
 
                 </div>
 
@@ -1558,45 +1527,47 @@ onMounted(() => {
 
         </Transition>
 
-    </section>
+
+        <!-- =====================================================
+             FOOTER
+        ====================================================== -->
+        <footer
+            class="border-t border-[#191919]/10"
+        >
+
+            <div
+                class="mx-auto flex max-w-[1600px] flex-col justify-between gap-3 px-6 py-8 text-[9px] uppercase tracking-[0.25em] text-[#191919]/25 sm:flex-row sm:px-10 lg:px-16"
+            >
+
+                <span>
+                    Teras Memori
+                </span>
+
+                <span>
+                    Service Management
+                </span>
+
+                <span>
+                    © {{ new Date().getFullYear() }}
+                </span>
+
+            </div>
+
+        </footer>
+
+    </div>
 </template>
 
 
 <style scoped>
-.fade-enter-active,
-.fade-leave-active {
-    transition:
-        opacity 0.25s ease,
-        transform 0.25s ease;
-}
-
-.fade-enter-from,
-.fade-leave-to {
-    opacity: 0;
-    transform: translateY(-5px);
-}
-
 .modal-enter-active,
 .modal-leave-active {
     transition: opacity 0.3s ease;
 }
 
-.modal-enter-active > div,
-.modal-leave-active > div {
-    transition:
-        opacity 0.3s ease,
-        transform 0.3s ease;
-}
-
 .modal-enter-from,
 .modal-leave-to {
     opacity: 0;
-}
-
-.modal-enter-from > div,
-.modal-leave-to > div {
-    opacity: 0;
-    transform: translateY(15px) scale(0.98);
 }
 </style>
 ```
