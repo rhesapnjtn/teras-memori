@@ -19,6 +19,9 @@ class PortfolioController extends Controller
     |--------------------------------------------------------------------------
     */
 
+    /**
+     * Get all published portfolios for public pages.
+     */
     public function index()
     {
         $portfolios = Portfolio::query()
@@ -29,6 +32,9 @@ class PortfolioController extends Controller
         return PortfolioResource::collection($portfolios);
     }
 
+    /**
+     * Get a single published portfolio.
+     */
     public function show(Portfolio $portfolio): PortfolioResource
     {
         abort_if(
@@ -46,6 +52,9 @@ class PortfolioController extends Controller
     |--------------------------------------------------------------------------
     */
 
+    /**
+     * Get all portfolios for admin dashboard.
+     */
     public function adminIndex()
     {
         $portfolios = Portfolio::query()
@@ -55,6 +64,9 @@ class PortfolioController extends Controller
         return PortfolioResource::collection($portfolios);
     }
 
+    /**
+     * Store a new portfolio.
+     */
     public function store(
         StorePortfolioRequest $request
     ): PortfolioResource {
@@ -88,15 +100,23 @@ class PortfolioController extends Controller
 
         $portfolio = Portfolio::create($data);
 
-        return new PortfolioResource($portfolio);
+        return new PortfolioResource(
+            $portfolio->fresh()
+        );
     }
 
+    /**
+     * Get a single portfolio for admin.
+     */
     public function adminShow(
         Portfolio $portfolio
     ): PortfolioResource {
         return new PortfolioResource($portfolio);
     }
 
+    /**
+     * Update portfolio.
+     */
     public function update(
         UpdatePortfolioRequest $request,
         Portfolio $portfolio
@@ -162,6 +182,9 @@ class PortfolioController extends Controller
         );
     }
 
+    /**
+     * Delete portfolio.
+     */
     public function destroy(
         Portfolio $portfolio
     ): JsonResponse {

@@ -11,12 +11,33 @@ class PortfolioResource extends JsonResource
     {
         return [
             'id' => $this->id,
+
             'title' => $this->title,
+
             'slug' => $this->slug,
+
             'description' => $this->description,
+
             'category' => $this->category,
-            'image' => $this->image,
-            'is_published' => $this->is_published,
+
+            'image' => $this->image
+                ? (
+                    preg_match(
+                        '/^https?:\/\//',
+                        $this->image
+                    )
+                        ? $this->image
+                        : asset(
+                            'storage/' . ltrim(
+                                $this->image,
+                                '/'
+                            )
+                        )
+                )
+                : null,
+
+            'is_published' => (bool) $this->is_published,
+
             'created_at' => $this->created_at,
         ];
     }
