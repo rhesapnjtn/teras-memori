@@ -9,23 +9,23 @@ const mobileMenuOpen = ref(false)
 
 const navigation = [
     {
-        name: 'Home',
+        name: 'Beranda',
         route: 'home',
     },
     {
-        name: 'Services',
+        name: 'Layanan',
         route: 'services',
     },
     {
-        name: 'Portfolio',
+        name: 'Portofolio',
         route: 'portfolio',
     },
     {
-        name: 'About',
+        name: 'Tentang',
         route: 'about',
     },
     {
-        name: 'Track Order',
+        name: 'Lacak Pesanan',
         route: 'track-order',
     },
 ]
@@ -132,6 +132,29 @@ const closeMobileMenu = () => {
                     </RouterLink>
 
                 </nav>
+
+
+                <!-- =================================================
+                     CTA
+                ================================================== -->
+
+                <div class="hidden items-center gap-3 md:flex">
+
+                    <RouterLink
+                        :to="{ name: 'order' }"
+                        class="group relative inline-flex items-center overflow-hidden rounded-full bg-[#191919] px-6 py-2.5 text-[10px] font-medium uppercase tracking-[0.25em] text-white shadow-sm transition duration-500 hover:bg-[#E85D75] focus:outline-none focus:ring-2 focus:ring-[#E85D75]/40 focus:ring-offset-2 focus:ring-offset-[#FFF8FA]"
+                    >
+                        <span class="relative z-10">
+                            Pesan Sekarang
+                        </span>
+
+                        <span
+                            class="absolute inset-0 translate-y-full bg-[#E85D75] transition duration-500 ease-out group-hover:translate-y-0"
+                        ></span>
+
+                    </RouterLink>
+
+                </div>
 
 
                 <!-- =================================================
@@ -511,3 +534,257 @@ const closeMobileMenu = () => {
     </div>
 </template>
 ```
+
+                <!-- Mobile Menu Button -->
+
+                <button
+                    @click="mobileMenuOpen = !mobileMenuOpen"
+                    class="group relative flex h-11 w-11 items-center justify-center rounded-full border border-[#191919]/15 transition duration-500 md:hidden"
+                    :class="mobileMenuOpen ? 'border-[#E85D75] bg-[#E85D75]/10' : 'hover:border-[#E85D75]'"
+                    aria-label="Toggle menu"
+                >
+
+                    <div class="relative flex h-3.5 w-5 flex-col justify-between">
+
+                        <span
+                            class="h-px w-full origin-left bg-[#191919] transition duration-500"
+                            :class="mobileMenuOpen ? 'rotate-45 translate-y-1' : ''"
+                        ></span>
+
+                        <span
+                            class="h-px w-3/4 bg-[#191919] transition duration-500"
+                            :class="mobileMenuOpen ? 'opacity-0' : ''"
+                        ></span>
+
+                        <span
+                            class="h-px w-full origin-left bg-[#191919] transition duration-500"
+                            :class="mobileMenuOpen ? '-rotate-45 -translate-y-1' : ''"
+                        ></span>
+
+                    </div>
+
+                </button>
+
+            </div>
+
+        </header>
+
+
+        <!-- =====================================================
+             MOBILE MENU
+        ====================================================== -->
+
+        <Transition name="mobile-menu">
+
+            <div
+                v-if="mobileMenuOpen"
+                class="fixed inset-x-0 top-[76px] z-40 bg-[#FFF8FA]/98 backdrop-blur-xl md:hidden"
+            >
+
+                <div
+                    class="flex flex-col divide-y divide-[#191919]/10 border-b border-[#191919]/10"
+                >
+
+                    <RouterLink
+                        v-for="item in navigation"
+                        :key="item.route"
+                        :to="{ name: item.route }"
+                        @click="closeMobileMenu"
+                        class="flex items-center justify-between px-6 py-4 text-[11px] uppercase tracking-[0.3em] transition duration-300"
+                        :class="isActive(item.route) ? 'text-[#191919]' : 'text-[#191919]/40 hover:text-[#191919]'"
+                    >
+
+                        {{ item.name }}
+
+                        <span
+                            v-if="isActive(item.route)"
+                            class="h-1.5 w-1.5 rounded-full bg-[#E85D75]"
+                        ></span>
+
+                    </RouterLink>
+
+                    <RouterLink
+                        :to="{ name: 'order' }"
+                        @click="closeMobileMenu"
+                        class="flex items-center justify-center gap-2 px-6 py-5 text-[11px] font-medium uppercase tracking-[0.3em] text-[#E85D75] transition duration-300 hover:text-[#191919]"
+                    >
+
+                        <span>Pesan Sekarang</span>
+
+                        <svg
+                            class="h-3 w-3"
+                            viewBox="0 0 20 20"
+                            fill="currentColor"
+                        >
+                            <path
+                                fill-rule="evenodd"
+                                d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"
+                                clip-rule="evenodd"
+                            />
+                        </svg>
+
+                    </RouterLink>
+
+                </div>
+
+            </div>
+
+        </Transition>
+
+
+        <!-- =====================================================
+             PAGE CONTENT
+        ====================================================== -->
+
+        <main>
+
+            <router-view />
+
+        </main>
+
+
+        <!-- =====================================================
+             FOOTER
+        ====================================================== -->
+
+        <footer class="border-t border-[#191919]/10 bg-[#FFF8FA]">
+
+            <div class="mx-auto max-w-[1600px] px-6 py-14 sm:px-10 lg:px-16">
+
+                <div
+                    class="flex flex-col items-start justify-between gap-10 lg:flex-row lg:items-center"
+                >
+
+                    <!-- Logo -->
+                    <RouterLink
+                        :to="{ name: 'home' }"
+                        class="group flex items-center gap-3"
+                    >
+
+                        <div
+                            class="relative flex h-9 w-9 items-center justify-center rounded-full border border-[#191919]/20 transition duration-500 group-hover:border-[#E85D75]"
+                        >
+
+                            <div
+                                class="h-2 w-2 rounded-full bg-[#E85D75] transition duration-500 group-hover:scale-150"
+                            ></div>
+
+                        </div>
+
+
+                        <div class="leading-none">
+
+                            <div
+                                class="text-[13px] font-semibold tracking-[0.12em]"
+                            >
+                                TERAS
+                            </div>
+
+                            <div
+                                class="mt-1 text-[9px] tracking-[0.35em] text-[#191919]/45"
+                            >
+                                MEMORI
+                            </div>
+
+                        </div>
+
+                    </RouterLink>
+
+
+                    <!-- Nav -->
+                    <nav
+                        class="flex flex-wrap items-center gap-x-7 gap-y-3 text-[10px] uppercase tracking-[0.25em] text-[#191919]/40"
+                    >
+
+                        <RouterLink
+                            :to="{ name: 'home' }"
+                            class="transition duration-300 hover:text-[#191919]"
+                        >
+                            Beranda
+                        </RouterLink>
+
+                        <RouterLink
+                            :to="{ name: 'services' }"
+                            class="transition duration-300 hover:text-[#191919]"
+                        >
+                            Layanan
+                        </RouterLink>
+
+                        <RouterLink
+                            :to="{ name: 'portfolio' }"
+                            class="transition duration-300 hover:text-[#191919]"
+                        >
+                            Portofolio
+                        </RouterLink>
+
+                        <RouterLink
+                            :to="{ name: 'order' }"
+                            class="transition duration-300 hover:text-[#191919]"
+                        >
+                            Pesan
+                        </RouterLink>
+
+                        <RouterLink
+                            :to="{ name: 'track-order' }"
+                            class="transition duration-300 hover:text-[#191919]"
+                        >
+                            Lacak Pesanan
+                        </RouterLink>
+
+                    </nav>
+
+                </div>
+
+
+                <div
+                    class="mt-10 flex flex-col items-start justify-between gap-4 border-t border-[#191919]/10 pt-8 sm:flex-row sm:items-center"
+                >
+
+                    <p
+                        class="text-[10px] uppercase tracking-[0.25em] text-[#191919]/30"
+                    >
+                        &copy; {{ new Date().getFullYear() }} Teras Memori. All rights reserved.
+                    </p>
+
+                    <p
+                        class="text-[10px] uppercase tracking-[0.25em] text-[#191919]/25"
+                    >
+                        Crafted with care for timeless memories.
+                    </p>
+
+                </div>
+
+            </div>
+
+        </footer>
+
+    </div>
+</template>
+
+
+<style scoped>
+.fade-enter-active,
+.fade-leave-active {
+    transition: opacity 0.4s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+    opacity: 0;
+}
+
+.mobile-menu-enter-active,
+.mobile-menu-leave-active {
+    transition: all 0.4s ease;
+}
+
+.mobile-menu-enter-from {
+    opacity: 0;
+    transform: translateY(-8px);
+}
+
+.mobile-menu-leave-to {
+    opacity: 0;
+    transform: translateY(-8px);
+}
+</style>
