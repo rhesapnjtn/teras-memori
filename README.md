@@ -1,262 +1,751 @@
-﻿# Teras Memori
+﻿# 📸 Teras Memori
 
-[![CI](https://github.com/rhesapnjtn/teras-memori/actions/workflows/ci.yml/badge.svg)](https://github.com/rhesapnjtn/teras-memori/actions/workflows/ci.yml)
-[![Laravel](https://img.shields.io/badge/Laravel-12.x-red.svg)](https://laravel.com)
-[![Vue.js](https://img.shields.io/badge/Vue.js-3.x-green.svg)](https://vuejs.org)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-v4-blue.svg)](https://tailwindcss.com)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+<p align="center">
+  <strong>Platform Pemesanan Layanan Kreatif Berbasis Web</strong>
+</p>
 
-**Teras Memori** adalah platform pemesanan layanan jasa kreatif berbasis web yang dibangun dengan Laravel 12 + Vue 3. Platform ini mempermudah proses pemesanan, pelacakan status pesanan, komunikasi real-time, serta pengelolaan layanan kreatif secara terintegrasi dan profesional.
+<p align="center">
+  <em>Pesan. Kelola. Berkomunikasi. Wujudkan Memori.</em>
+</p>
 
-## 🎯 Tentang Proyek
+<p align="center">
+  <img src="https://img.shields.io/badge/Laravel-12.x-red?style=for-the-badge&logo=laravel" alt="Laravel">
+  <img src="https://img.shields.io/badge/Vue.js-3.x-42b883?style=for-the-badge&logo=vue.js" alt="Vue.js">
+  <img src="https://img.shields.io/badge/Tailwind_CSS-v4-06b6d4?style=for-the-badge&logo=tailwindcss" alt="Tailwind CSS">
+  <img src="https://img.shields.io/badge/Pinia-4.x-ffd859?style=for-the-badge&logo=pinia" alt="Pinia">
+</p>
 
-Teras Memori hadir untuk mendigitalisasi layanan jasa fotografi, videografi, editing, desain, dan kebutuhan kreatif lainnya. Dengan sistem yang terpusat, pelanggan dapat memesan layanan, melacak status pesanan, mengunggah file, serta berkomunikasi langsung dengan admin melalui fitur chat real-time. Sementara itu, admin dapat mengelola seluruh aktivitas melalui dashboard yang ringkas dan mudah digunakan.
+<p align="center">
+  <img src="https://img.shields.io/github/actions/workflow/status/rhesapnjtn/teras-memori/ci.yml?style=flat-square&label=CI" alt="CI">
+  <img src="https://img.shields.io/github/license/rhesapnjtn/teras-memori?style=flat-square" alt="License">
+</p>
+
+---
+
+## 🖼️ Tentang Teras Memori
+
+**Teras Memori** adalah platform digital untuk pemesanan dan pengelolaan **layanan kreatif** seperti fotografi, videografi, editing, desain, dan berbagai kebutuhan visual lainnya.
+
+Platform ini dirancang untuk mempertemukan pelanggan dengan penyedia layanan kreatif melalui proses yang lebih **terstruktur, transparan, dan terintegrasi**.
+
+Tidak hanya menyediakan sistem pemesanan, Teras Memori juga mencakup pengelolaan pesanan, pelacakan status, komunikasi real-time, pengiriman file, pembayaran, portofolio, hingga pengelolaan pelanggan melalui dashboard admin.
+
+> 🎯 **Tujuan utama:** mengubah proses pemesanan jasa kreatif yang biasanya dilakukan secara manual melalui chat menjadi sebuah workflow digital yang terorganisir.
+
+---
 
 ## ✨ Fitur Utama
 
-### Untuk Pengunjung & Pelanggan
-- **Landing Page Modern** – Tampilan elegan dan responsif untuk memamerkan layanan & portofolio
-- **Katalog Layanan** – Daftar layanan lengkap dengan deskripsi, harga, dan detail
-- **Galeri Portofolio** – Showcase hasil karya untuk meningkatkan kepercayaan pelanggan
-- **Sistem Pemesanan Online** – Form pemesanan sederhana tanpa perlu registrasi
-- **Order Tracking** – Lacak status pesanan secara publik berdasarkan Nomor Pesanan & Email
-- **Customer Portal** – Akses informasi pesanan, unggah file, dan histori chat
-- **Chat Real-Time** – Komunikasi langsung dengan admin via WebSocket
-- **Testimoni Publik** – Ulasan pelanggan yang ditampilkan di landing page
+### 👤 Untuk Pengunjung & Pelanggan
 
-### Untuk Admin Dashboard
-- **Overview Dashboard** – Statistik pesanan, pelanggan, pendapatan & aktivitas terkini
-- **Manajemen Layanan** – CRUD layanan, harga, status aktif/nonaktif
-- **Manajemen Pesanan** – Update status pesanan, kelola item, file & pembayaran
-- **Manajemen Pelanggan** – Data pelanggan, histori pesanan & chat
-- **Manajemen Portofolio** – Kelola karya portofolio dengan gambar & kategori
-- **Manajemen Ulasan** – Moderasi testimoni pelanggan
-- **Chat Management** – Inbox real-time terpusat dengan private channel
-- **Role-Based Access** – Akses terbatas menggunakan Spatie Laravel Permission
-- **Autentikasi Aman** – Login admin dengan Laravel Sanctum
+| Fitur                   | Deskripsi                                                                       |
+| ----------------------- | ------------------------------------------------------------------------------- |
+| 🏠 **Landing Page**     | Menampilkan layanan, portofolio, testimoni, dan informasi bisnis secara menarik |
+| 🎨 **Katalog Layanan**  | Menampilkan berbagai layanan kreatif beserta deskripsi dan harga                |
+| 🖼️ **Portofolio**      | Showcase hasil pekerjaan untuk membantu pelanggan menentukan pilihan            |
+| 🛒 **Pemesanan Online** | Pelanggan dapat membuat pesanan secara online tanpa proses manual               |
+| 🔎 **Order Tracking**   | Melacak status pesanan menggunakan informasi pesanan                            |
+| 👥 **Customer Portal**  | Area pelanggan untuk melihat pesanan dan aktivitas terkait                      |
+| 📁 **File Upload**      | Pelanggan dapat mengirim file yang dibutuhkan untuk proses pengerjaan           |
+| 💬 **Real-Time Chat**   | Komunikasi langsung antara pelanggan dan admin                                  |
+| ⭐ **Testimoni**         | Pelanggan dapat memberikan ulasan terhadap layanan                              |
 
-## 🛠️ Tech Stack
+---
 
-### Backend
-- [Laravel 12](https://laravel.com) – Full-stack PHP framework
-- [Laravel Sanctum](https://laravel.com/docs/sanctum) – API & Web Authentication
-- [Spatie Laravel Permission](https://spatie.be/docs/laravel-permission) – Role & Permission
-- [Laravel Reverb](https://reverb.laravel.com) – Native WebSocket Broadcasting
-- [Pusher](https://pusher.com) – Alternative WebSocket Driver (configurable)
-- [PHPUnit](https://phpunit.de) – Testing
+### 🛠️ Untuk Admin
 
-### Frontend
-- [Vue 3](https://vuejs.org) – Composition API, Reactive & Performant
-- [Vue Router 5](https://router.vuejs.org) – SPA Routing
-- [Pinia 4](https://pinia.vuejs.org) – Intuitive State Management
-- [Vite 7](https://vitejs.dev) – Lightning-fast Build Tool
-- [Tailwind CSS v4](https://tailwindcss.com) – Modern Utility-first CSS
-- [Laravel Echo](https://laravel.com/docs/broadcasting#client-side-installation) + [Pusher.js](https://github.com/pusher/pusher-js) – Real-time Client
-- [Axios](https://axios-http.com) – Promise-based HTTP Client
+| Fitur                        | Deskripsi                                                         |
+| ---------------------------- | ----------------------------------------------------------------- |
+| 📊 **Dashboard Overview**    | Ringkasan statistik pesanan, pelanggan, pendapatan, dan aktivitas |
+| 📦 **Manajemen Pesanan**     | Mengelola pesanan dan memperbarui status pengerjaan               |
+| 🎨 **Manajemen Layanan**     | CRUD layanan, harga, deskripsi, dan status layanan                |
+| 👥 **Manajemen Pelanggan**   | Melihat data pelanggan dan histori aktivitas                      |
+| 🖼️ **Manajemen Portofolio** | Mengelola karya yang ditampilkan pada website                     |
+| ⭐ **Manajemen Ulasan**       | Memoderasi testimoni pelanggan                                    |
+| 💬 **Chat Management**       | Inbox terpusat untuk komunikasi dengan pelanggan                  |
+| 🔐 **Role & Permission**     | Pengaturan hak akses berdasarkan role                             |
+| 📁 **File Management**       | Mengelola file yang dikirim dalam proses pemesanan                |
+| 💳 **Pembayaran**            | Pengelolaan informasi dan status pembayaran                       |
 
-### Dev Tools
-- [Laravel Pint](https://laravel.com/docs/pint) – Automated Code Style
-- [Concurrently](https://github.com/open-cli-tools/concurrently) – Run multiple dev processes
-- [Laravel Tinker](https://laravel.com/docs/tinker) & [Laravel Pail](https://laravel.com/docs/pail) – Debugging Tools
+---
 
-## 📋 Prasyarat
+# 🏗️ Arsitektur Sistem
 
-- [PHP](https://php.net) >= 8.2
-- [Composer](https://getcomposer.org) >= 2.x
-- [Node.js](https://nodejs.org) >= 18.x (LTS v20.x direkomendasikan)
-- [NPM](https://www.npmjs.com) >= 9.x
-- Database: [MySQL](https://mysql.com) 8.0+, [PostgreSQL](https://postgresql.org) 14+, atau [SQLite](https://sqlite.org) 3.x
+Teras Memori menggunakan pendekatan **full-stack web application** dengan Laravel sebagai backend dan Vue sebagai frontend.
 
-## 🚀 Instalasi
+```text
+┌─────────────────────────────────────────────┐
+│                  CUSTOMER                   │
+│                                             │
+│        Browser / Mobile Web Browser         │
+└──────────────────────┬──────────────────────┘
+                       │
+                       │ HTTP / WebSocket
+                       ▼
+┌─────────────────────────────────────────────┐
+│                VUE 3 FRONTEND               │
+│                                             │
+│  Vue Router │ Pinia │ Axios │ Tailwind CSS  │
+└──────────────────────┬──────────────────────┘
+                       │
+                       │ REST API
+                       ▼
+┌─────────────────────────────────────────────┐
+│              LARAVEL 12 BACKEND             │
+│                                             │
+│ Controllers │ Services │ Models │ Policies  │
+│                                             │
+│ Sanctum │ Permission │ Broadcasting         │
+└──────────────┬─────────────────┬────────────┘
+               │                 │
+               ▼                 ▼
+        ┌──────────────┐   ┌───────────────┐
+        │   Database   │   │  Broadcasting │
+        │              │   │               │
+        │ MySQL /      │   │ Reverb /      │
+        │ PostgreSQL / │   │ Pusher        │
+        │ SQLite       │   │               │
+        └──────────────┘   └───────────────┘
+```
 
-### 1. Clone Repository
+> Catatan: pilihan database dapat disesuaikan dengan environment development maupun production.
+
+---
+
+# 🛠️ Teknologi yang Digunakan
+
+## Backend
+
+* **Laravel 12** — Framework utama backend
+* **Laravel Sanctum** — Autentikasi berbasis API
+* **Spatie Laravel Permission** — Role & permission management
+* **Laravel Reverb** — WebSocket broadcasting
+* **Pusher** — Alternatif broadcasting driver
+* **PHPUnit** — Automated testing
+* **Laravel Pint** — Code style & formatting
+
+## Frontend
+
+* **Vue 3** — Reactive frontend framework
+* **Vue Router** — SPA routing
+* **Pinia** — State management
+* **Axios** — HTTP client
+* **Tailwind CSS v4** — UI styling
+* **Vite** — Frontend build tool
+* **Laravel Echo** — WebSocket client
+* **Pusher.js** — Real-time communication
+
+## Development Tools
+
+* **Laravel Tinker** — Interactive application debugging
+* **Laravel Pail** — Real-time application logs
+* **Concurrently** — Menjalankan beberapa development process sekaligus
+* **Git & GitHub** — Version control dan collaboration
+* **GitHub Actions** — Continuous Integration
+
+---
+
+# 📋 Persyaratan Sistem
+
+Sebelum menjalankan project, pastikan environment sudah memiliki:
+
+| Software |                      Versi Minimum |      Rekomendasi |
+| -------- | ---------------------------------: | ---------------: |
+| PHP      |                                8.2 |             8.2+ |
+| Composer |                                2.x |    Versi terbaru |
+| Node.js  |                               18.x |         20.x LTS |
+| NPM      |                                9.x |    Versi terbaru |
+| Database | SQLite 3 / MySQL 8 / PostgreSQL 14 | Sesuai kebutuhan |
+
+---
+
+# 🚀 Instalasi
+
+## 1. Clone Repository
+
 ```bash
 git clone https://github.com/rhesapnjtn/teras-memori.git
 cd teras-memori
 ```
 
-### 2. Install Dependencies
-```bash
-# Install PHP dependencies
-composer install
+## 2. Install Dependency
 
-# Install Node.js dependencies
+### PHP
+
+```bash
+composer install
+```
+
+### JavaScript
+
+```bash
 npm install
 ```
 
-### 3. Konfigurasi Environment
-```bash
-# Copy .env.example ke .env
-cp .env.example .env
+---
 
-# Generate application key
+## 3. Konfigurasi Environment
+
+Salin file environment:
+
+```bash
+cp .env.example .env
+```
+
+Kemudian generate application key:
+
+```bash
 php artisan key:generate
 ```
 
-### 4. Konfigurasi Database
+> ⚠️ **Jangan pernah commit file `.env` ke repository.**
 
-**Opsi A: SQLite (Rekomendasi untuk Development)**
-```bash
-# Buat file database
-touch database/database.sqlite
+Pastikan konfigurasi environment lokal seperti database, mail, broadcasting, storage, dan service lainnya disesuaikan dengan environment masing-masing.
 
-# Edit .env
-DB_CONNECTION=sqlite
-DB_DATABASE=/full/path/ke/database.sqlite
-```
+---
 
-**Opsi B: MySQL**
+# 🗄️ Konfigurasi Database
+
+Teras Memori dapat digunakan dengan beberapa database yang didukung Laravel.
+
+Untuk development, **SQLite** dapat digunakan sebagai pilihan sederhana karena tidak membutuhkan database server terpisah.
+
+Contoh konfigurasi menggunakan SQLite:
+
 ```env
-DB_CONNECTION=mysql
-DB_HOST=127.0.0.1
-DB_PORT=3306
-DB_DATABASE=teras_memori
-DB_USERNAME=root
-DB_PASSWORD=
+DB_CONNECTION=sqlite
 ```
 
-### 5. Migrasi & Seeding
-```bash
-# Jalankan migrasi database
-php artisan migrate
+Untuk MySQL atau PostgreSQL, gunakan konfigurasi environment sesuai database lokal Anda.
 
-# (Opsional) Jalankan seeder untuk data dummy
+> 🔐 **Keamanan:** jangan menyimpan username, password, API key, token, connection string, atau credential database di dalam source code maupun README.
+
+---
+
+# 🌱 Migrasi & Seeder
+
+Jalankan migrasi:
+
+```bash
+php artisan migrate
+```
+
+Jika project memiliki data dummy/seeder:
+
+```bash
 php artisan db:seed
 ```
 
-### 6. Storage Link
+Atau jalankan keduanya:
+
+```bash
+php artisan migrate --seed
+```
+
+---
+
+# 📁 Storage
+
+Buat symbolic link untuk Laravel Storage:
+
 ```bash
 php artisan storage:link
 ```
 
-## 💻 Menjalankan Aplikasi
+Hal ini diperlukan apabila aplikasi menggunakan file upload seperti:
 
-### Opsi 1: Concurrent (Rekomendasi)
-Jalankan semua service development sekaligus dengan single command:
+* Foto portofolio
+* File pelanggan
+* Thumbnail layanan
+* Asset lainnya
+
+---
+
+# 💻 Menjalankan Project
+
+## ⚡ Cara 1 — Concurrent Development
+
+Untuk menjalankan beberapa service sekaligus:
 
 ```bash
 composer run dev
 ```
 
-Perintah ini akan menjalankan:
-- Laravel Dev Server (`php artisan serve`)
-- Queue Worker (`php artisan queue:listen`)
-- Log Viewer Pail (`php artisan pail`)
-- Vite Dev Server dengan HMR (`npm run dev`)
+Command tersebut dapat menjalankan beberapa proses development seperti:
 
-### Opsi 2: Manual (Terpisah)
-Buka 4 terminal berbeda:
+```text
+Laravel Server
+     │
+     ├── php artisan serve
+     │
+     ├── Queue Worker
+     │
+     ├── Laravel Pail
+     │
+     └── Vite HMR
+```
+
+Aplikasi biasanya dapat diakses melalui:
+
+```text
+http://localhost:8000
+```
+
+---
+
+## 🧩 Cara 2 — Manual
+
+Jika ingin menjalankan service secara terpisah, buka beberapa terminal.
+
+### Terminal 1 — Laravel
 
 ```bash
-# Terminal 1 - Laravel Server
 php artisan serve
+```
 
-# Terminal 2 - Queue Worker
+### Terminal 2 — Queue Worker
+
+```bash
 php artisan queue:listen --tries=1 --timeout=0
+```
 
-# Terminal 3 - Pail Logs
+### Terminal 3 — Laravel Pail
+
+```bash
 php artisan pail --timeout=0
+```
 
-# Terminal 4 - Vite
+### Terminal 4 — Vite
+
+```bash
 npm run dev
 ```
 
-Aplikasi bisa diakses di: [http://localhost:8000](http://localhost:8000)
+---
 
-## 🔌 Konfigurasi Real-Time (Broadcasting)
+# 💬 Real-Time Communication
 
-### Menggunakan Laravel Reverb (Native)
-```env
-BROADCAST_CONNECTION=reverb
-REVERB_APP_ID=your-app-id
-REVERB_APP_KEY=your-app-key
-REVERB_APP_SECRET=your-app-secret
-REVERB_HOST=127.0.0.1
-REVERB_PORT=8080
-REVERB_SCHEME=http
-```
+Teras Memori mendukung komunikasi real-time menggunakan sistem broadcasting Laravel.
 
-Jalankan Reverb server:
+Salah satu konfigurasi yang dapat digunakan adalah **Laravel Reverb**.
+
+Jalankan Reverb:
+
 ```bash
 php artisan reverb:start
 ```
 
-### Menggunakan Pusher
-```env
-BROADCAST_CONNECTION=pusher
-PUSHER_APP_ID=your-app-id
-PUSHER_APP_KEY=your-app-key
-PUSHER_APP_SECRET=your-app-secret
-PUSHER_APP_CLUSTER=mt1
+Arsitektur komunikasi:
+
+```text
+Customer
+   │
+   │ Send Message
+   ▼
+Laravel Backend
+   │
+   │ Broadcast Event
+   ▼
+Reverb / Pusher
+   │
+   ▼
+Admin Dashboard
+   │
+   │ Real-Time Message
+   ▼
+Customer
 ```
 
-Frontend akan otomatis membaca konfigurasi dari `VITE_REVERB_*` / `PUSHER_*` di file `.env`.
+Dengan pendekatan ini, pesan dapat diterima tanpa pengguna harus melakukan refresh halaman secara manual.
 
-## 🧪 Testing
+---
+
+# 🔐 Autentikasi & Authorization
+
+Teras Memori menggunakan beberapa lapisan keamanan:
+
+### Laravel Sanctum
+
+Digunakan untuk autentikasi aplikasi dan komunikasi API.
+
+### Spatie Laravel Permission
+
+Digunakan untuk mengatur:
+
+```text
+User
+ │
+ ├── Role
+ │    │
+ │    ├── Permission A
+ │    ├── Permission B
+ │    └── Permission C
+ │
+ └── Access Control
+```
+
+Dengan sistem ini, akses ke halaman dan fitur tertentu dapat dibatasi berdasarkan role dan permission.
+
+---
+
+# 🧪 Testing
+
+Menjalankan seluruh test:
 
 ```bash
-# Jalankan semua test
 php artisan test
+```
 
-# Jalankan dengan testdox (lebih informatif)
+Menggunakan PHPUnit TestDox:
+
+```bash
 vendor/bin/phpunit --testdox
+```
 
-# Hanya Feature Tests
+### Feature Tests
+
+```bash
 php artisan test --testsuite=Feature
+```
 
-# Hanya Unit Tests
+### Unit Tests
+
+```bash
 php artisan test --testsuite=Unit
 ```
 
-Testing menggunakan **SQLite in-memory** untuk eksekusi cepat & terisolasi.
+Testing menggunakan environment yang terisolasi agar tidak mengganggu data development utama.
 
-## 🎨 Code Quality
+---
+
+# 🎨 Code Quality
+
+Teras Memori menggunakan **Laravel Pint** untuk menjaga konsistensi style kode.
+
+### Format kode
 
 ```bash
-# Auto-fix code style dengan Laravel Pint
 vendor/bin/pint
+```
 
-# Cek code style tanpa memperbaiki (digunakan di CI)
+### Mengecek tanpa melakukan perubahan
+
+```bash
 vendor/bin/pint --test
 ```
 
-## 🏗️ Build untuk Production
+Sebelum melakukan Pull Request, disarankan menjalankan:
 
 ```bash
-# Build frontend assets
+vendor/bin/pint --test
+php artisan test
 npm run build
+```
 
-# Optimasi Laravel (direkomendasikan)
+---
+
+# 🔄 Continuous Integration
+
+Project ini menggunakan **GitHub Actions** untuk membantu memastikan perubahan kode tetap memenuhi standar project.
+
+Workflow CI dapat digunakan untuk melakukan pemeriksaan seperti:
+
+```text
+Push / Pull Request
+        │
+        ▼
+GitHub Actions
+        │
+        ├── Install Dependencies
+        │
+        ├── Code Style Check
+        │
+        ├── Run Tests
+        │
+        └── Build Frontend
+                │
+                ▼
+             PASS / FAIL
+```
+
+Tujuannya adalah menangkap error sebelum perubahan digabungkan ke branch utama.
+
+---
+
+# 🏭 Production Build
+
+Build frontend:
+
+```bash
+npm run build
+```
+
+Untuk optimasi Laravel:
+
+```bash
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
 ```
 
-## 📚 Dokumentasi
+> Untuk deployment production, pastikan konfigurasi environment, database, queue, storage, broadcasting, HTTPS, dan service pendukung telah dikonfigurasi sesuai infrastruktur yang digunakan.
 
-Dokumentasi lengkap terkait arsitektur, design system, ERD, API, dan UI/UX tersedia di:
-- **[DESIGN.md](./DESIGN.md)** – Technical Design Document (arsitektur, flow, DB design, UI/UX, deployment)
+---
 
-## 🤝 Kontribusi
+# 📂 Struktur Project
 
-Kontribusi sangat kami apresiasi! Silakan ikuti langkah berikut:
+Gambaran umum struktur project:
 
-1. **Fork** repository ini
-2. Buat branch baru: `git checkout -b feature/nama-fitur`
-3. Commit perubahan: `git commit -m "feat: deskripsi fitur"`
-4. Push ke branch: `git push origin feature/nama-fitur`
-5. Buat **Pull Request** ke branch `main`
+```text
+teras-memori/
+│
+├── app/
+│   ├── Http/
+│   ├── Models/
+│   ├── Services/
+│   └── ...
+│
+├── database/
+│   ├── migrations/
+│   ├── seeders/
+│   └── factories/
+│
+├── resources/
+│   ├── js/
+│   │   ├── components/
+│   │   ├── pages/
+│   │   ├── stores/
+│   │   └── ...
+│   │
+│   └── css/
+│
+├── routes/
+│   ├── web.php
+│   ├── api.php
+│   └── channels.php
+│
+├── tests/
+│   ├── Feature/
+│   └── Unit/
+│
+├── public/
+├── storage/
+├── composer.json
+├── package.json
+├── vite.config.js
+└── README.md
+```
 
-Pastikan kode sudah mengikuti style guide (`vendor/bin/pint`) dan semua test lolos sebelum mengajukan PR.
+Struktur aktual dapat berkembang mengikuti kebutuhan fitur dan arsitektur aplikasi.
 
-## 🐛 Issue
+---
 
-Jika menemukan bug atau memiliki saran fitur, silakan buat [Issue Baru](https://github.com/rhesapnjtn/teras-memori/issues).
+# 🔒 Keamanan
 
-## 📄 Lisensi
+Beberapa hal penting yang harus diperhatikan ketika menjalankan project:
 
-Proyek ini dilisensikan di bawah [MIT License](https://opensource.org/licenses/MIT). Lihat file [LICENSE](./LICENSE) untuk detail lebih lanjut.
+### Jangan commit `.env`
 
-## 🙏 Acknowledgement
+```text
+.env
+```
 
-Dibangun dengan ❤️ menggunakan [Laravel](https://laravel.com), [Vue.js](https://vuejs.org), dan [Tailwind CSS](https://tailwindcss.com).
+harus berada di `.gitignore`.
+
+### Jangan commit credential
+
+Jangan memasukkan hal berikut ke repository:
+
+```text
+Database Password
+API Key
+Secret Key
+Access Token
+Private Key
+SMTP Password
+Cloud Credentials
+Production Credentials
+```
+
+### Gunakan `.env.example`
+
+Repository hanya perlu menyediakan contoh konfigurasi:
+
+```env
+APP_NAME=
+APP_ENV=
+APP_KEY=
+
+DB_CONNECTION=
+
+BROADCAST_CONNECTION=
+
+MAIL_MAILER=
+```
+
+Tanpa memasukkan credential sebenarnya.
+
+---
+
+# 🗺️ Roadmap
+
+Beberapa pengembangan yang dapat dilakukan ke depannya:
+
+* [x] Landing Page
+* [x] Katalog Layanan
+* [x] Portofolio
+* [x] Sistem Pemesanan
+* [x] Customer Portal
+* [x] Order Tracking
+* [x] Admin Dashboard
+* [x] Role & Permission
+* [x] Real-Time Chat
+* [x] File Upload
+* [x] Testimoni
+* [x] Automated Testing
+* [x] Continuous Integration
+* [ ] Payment Gateway Integration
+* [ ] Notification System
+* [ ] Email Notification
+* [ ] Advanced Analytics
+* [ ] Customer Invoice
+* [ ] Production Deployment Automation
+* [ ] Progressive Web App
+
+---
+
+# 📚 Dokumentasi
+
+Dokumentasi teknis lebih lanjut tersedia pada:
+
+**[DESIGN.md](./DESIGN.md)**
+
+Dokumentasi tersebut mencakup beberapa bagian seperti:
+
+* Arsitektur aplikasi
+* Business flow
+* Database design
+* ERD
+* API
+* UI/UX
+* Deployment
+* Technical decisions
+
+---
+
+# 🤝 Kontribusi
+
+Kontribusi sangat terbuka untuk pengembangan project ini.
+
+### 1. Fork repository
+
+Buat fork repository ke akun GitHub Anda.
+
+### 2. Buat branch baru
+
+```bash
+git checkout -b feature/nama-fitur
+```
+
+### 3. Lakukan perubahan
+
+Pastikan perubahan mengikuti struktur dan standar kode project.
+
+### 4. Jalankan testing
+
+```bash
+php artisan test
+```
+
+### 5. Cek code style
+
+```bash
+vendor/bin/pint --test
+```
+
+### 6. Commit perubahan
+
+```bash
+git add .
+git commit -m "feat: deskripsi perubahan"
+```
+
+### 7. Push branch
+
+```bash
+git push origin feature/nama-fitur
+```
+
+### 8. Buat Pull Request
+
+Buat Pull Request menuju branch utama project.
+
+---
+
+# 🐛 Bug & Feature Request
+
+Menemukan bug atau memiliki ide pengembangan?
+
+Silakan buat **Issue** pada repository GitHub agar dapat didokumentasikan dan ditindaklanjuti.
+
+---
+
+# 📄 Lisensi
+
+Project ini menggunakan lisensi **MIT License**.
+
+Lihat file [LICENSE](./LICENSE) untuk informasi selengkapnya.
+
+---
+
+# ❤️ Acknowledgement
+
+Teras Memori dibangun menggunakan berbagai teknologi open-source dan tools modern.
+
+Terima kasih kepada komunitas:
+
+* Laravel
+* Vue.js
+* Tailwind CSS
+* Pinia
+* Vite
+* Spatie
+* Pusher
+* PHPUnit
+* GitHub Actions
+
+dan seluruh komunitas open-source yang terus menyediakan tools luar biasa untuk developer.
+
+---
+
+## 👨‍💻 Tentang Project
+
+**Teras Memori** dikembangkan sebagai platform untuk mendigitalisasi proses bisnis layanan kreatif, mulai dari pelanggan menemukan layanan hingga pesanan selesai.
+
+Project ini juga menjadi implementasi nyata dari berbagai konsep pengembangan aplikasi modern, seperti:
+
+```text
+Frontend Development
+        +
+Backend Development
+        +
+REST API
+        +
+Authentication
+        +
+Authorization
+        +
+Database
+        +
+Real-Time Communication
+        +
+File Management
+        +
+Automated Testing
+        +
+CI/CD
+        ↓
+   TERAS MEMORI
+```
+
+> **Teras Memori — Mengubah ide dan momen menjadi karya yang tak terlupakan. 📸**
