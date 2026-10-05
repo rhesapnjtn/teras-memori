@@ -26,7 +26,6 @@ class ChatController extends Controller
         return ChatResource::collection($chats);
     }
 
-
     /**
      * Menampilkan detail percakapan.
      */
@@ -39,7 +38,6 @@ class ChatController extends Controller
 
         return new ChatResource($chat);
     }
-
 
     /**
      * Admin mengirim pesan.
@@ -82,7 +80,6 @@ class ChatController extends Controller
 
         return new ChatResource($chat);
     }
-
 
     /**
      * Menutup percakapan.

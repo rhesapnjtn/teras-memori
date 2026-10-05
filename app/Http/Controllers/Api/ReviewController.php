@@ -49,7 +49,7 @@ class ReviewController extends Controller
             ])
             ->review;
 
-        if (!$review) {
+        if (! $review) {
             return response()->json([
                 'data' => null,
                 'message' => 'Review belum diberikan.',
@@ -58,17 +58,18 @@ class ReviewController extends Controller
 
         return new ReviewResource($review);
     }
-    public function published(): AnonymousResourceCollection
-{
-    $reviews = Review::query()
-        ->with([
-            'customer',
-            'order',
-        ])
-        ->where('is_published', true)
-        ->latest()
-        ->get();
 
-    return ReviewResource::collection($reviews);
-}
+    public function published(): AnonymousResourceCollection
+    {
+        $reviews = Review::query()
+            ->with([
+                'customer',
+                'order',
+            ])
+            ->where('is_published', true)
+            ->latest()
+            ->get();
+
+        return ReviewResource::collection($reviews);
+    }
 }

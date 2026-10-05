@@ -54,7 +54,7 @@ class OrderResource extends JsonResource
 
                                 // URL file customer
                                 'file_url' => asset(
-                                    'storage/' . $file->file_path
+                                    'storage/'.$file->file_path
                                 ),
 
                                 'file_type' => $file->file_type,

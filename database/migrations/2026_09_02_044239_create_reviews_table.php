@@ -10,29 +10,29 @@ return new class extends Migration
      * Run the migrations.
      */
     public function up(): void
-{
-    Schema::create('reviews', function (Blueprint $table) {
-        $table->id();
+    {
+        Schema::create('reviews', function (Blueprint $table) {
+            $table->id();
 
-        $table->foreignId('customer_id')
-            ->constrained('customers')
-            ->cascadeOnDelete();
+            $table->foreignId('customer_id')
+                ->constrained('customers')
+                ->cascadeOnDelete();
 
-        $table->foreignId('order_id')
-            ->constrained('orders')
-            ->cascadeOnDelete();
+            $table->foreignId('order_id')
+                ->constrained('orders')
+                ->cascadeOnDelete();
 
-        $table->unsignedTinyInteger('rating');
+            $table->unsignedTinyInteger('rating');
 
-        $table->text('comment')->nullable();
+            $table->text('comment')->nullable();
 
-        $table->boolean('is_published')->default(false);
+            $table->boolean('is_published')->default(false);
 
-        $table->timestamps();
+            $table->timestamps();
 
-        $table->unique(['customer_id', 'order_id']);
-    });
-}
+            $table->unique(['customer_id', 'order_id']);
+        });
+    }
 
     /**
      * Reverse the migrations.

@@ -1,26 +1,22 @@
 <?php
 
-use App\Http\Controllers\Api\AuthController;
-use App\Http\Controllers\Api\OrderController;
-use App\Http\Controllers\Api\PortfolioController;
-use App\Http\Controllers\Api\ServiceController;
-use App\Http\Controllers\Api\ReviewController;
-use App\Http\Controllers\Api\ChatController;
-
-use App\Http\Controllers\Api\Admin\ReviewController as AdminReviewController;
+use App\Http\Controllers\Api\Admin\ChatController as AdminChatController;
 use App\Http\Controllers\Api\Admin\CustomerController;
 use App\Http\Controllers\Api\Admin\OrderController as AdminOrderController;
-use App\Http\Controllers\Api\Admin\ChatController as AdminChatController;
-
+use App\Http\Controllers\Api\Admin\ReviewController as AdminReviewController;
+use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\ChatController;
+use App\Http\Controllers\Api\OrderController;
+use App\Http\Controllers\Api\PortfolioController;
+use App\Http\Controllers\Api\ReviewController;
+use App\Http\Controllers\Api\ServiceController;
 use Illuminate\Support\Facades\Route;
-
 
 /*
 |--------------------------------------------------------------------------
 | Public
 |--------------------------------------------------------------------------
 */
-
 
 /*
 |--------------------------------------------------------------------------
@@ -38,7 +34,6 @@ Route::get(
     [ServiceController::class, 'show']
 );
 
-
 /*
 |--------------------------------------------------------------------------
 | Portfolios
@@ -55,13 +50,11 @@ Route::get(
     [PortfolioController::class, 'show']
 );
 
-
 /*
 |--------------------------------------------------------------------------
 | Orders
 |--------------------------------------------------------------------------
 */
-
 
 /*
 |--------------------------------------------------------------------------
@@ -73,7 +66,6 @@ Route::post(
     '/orders',
     [OrderController::class, 'store']
 );
-
 
 /*
 |--------------------------------------------------------------------------
@@ -90,7 +82,6 @@ Route::post(
     [OrderController::class, 'track']
 );
 
-
 /*
 |--------------------------------------------------------------------------
 | Order List
@@ -102,7 +93,6 @@ Route::get(
     [OrderController::class, 'index']
 );
 
-
 /*
 |--------------------------------------------------------------------------
 | Order Detail
@@ -113,7 +103,6 @@ Route::get(
     '/orders/{order}',
     [OrderController::class, 'show']
 );
-
 
 /*
 |--------------------------------------------------------------------------
@@ -140,7 +129,6 @@ Route::get(
     [ReviewController::class, 'showByOrder']
 );
 
-
 /*
 |--------------------------------------------------------------------------
 | Public Chat
@@ -157,7 +145,6 @@ Route::get(
 | - Token digunakan untuk mengakses chat dan mengirim pesan
 |
 */
-
 
 /*
 |--------------------------------------------------------------------------
@@ -180,7 +167,6 @@ Route::post(
 )->middleware(
     'throttle:public-chat-create'
 );
-
 
 /*
 |--------------------------------------------------------------------------
@@ -206,7 +192,6 @@ Route::get(
     'throttle:public-chat-customer'
 );
 
-
 /*
 |--------------------------------------------------------------------------
 | Chat Detail
@@ -229,7 +214,6 @@ Route::get(
     'throttle:public-chat-show'
 );
 
-
 /*
 |--------------------------------------------------------------------------
 | Send Customer Message
@@ -250,7 +234,6 @@ Route::post(
     'throttle:public-chat-message'
 );
 
-
 /*
 |--------------------------------------------------------------------------
 | Authentication
@@ -261,7 +244,6 @@ Route::post(
     '/login',
     [AuthController::class, 'login']
 );
-
 
 /*
 |--------------------------------------------------------------------------
@@ -275,7 +257,6 @@ Route::post(
 */
 
 Route::middleware('auth:sanctum')->group(function () {
-
 
     /*
     |--------------------------------------------------------------------------
@@ -292,7 +273,6 @@ Route::middleware('auth:sanctum')->group(function () {
         '/user',
         [AuthController::class, 'user']
     );
-
 
     /*
     |--------------------------------------------------------------------------
@@ -325,7 +305,6 @@ Route::middleware('auth:sanctum')->group(function () {
         [ServiceController::class, 'destroy']
     );
 
-
     /*
     |--------------------------------------------------------------------------
     | Admin - Portfolios
@@ -357,7 +336,6 @@ Route::middleware('auth:sanctum')->group(function () {
         [PortfolioController::class, 'destroy']
     );
 
-
     /*
     |--------------------------------------------------------------------------
     | Admin - Orders
@@ -384,7 +362,6 @@ Route::middleware('auth:sanctum')->group(function () {
         [AdminOrderController::class, 'updatePayment']
     );
 
-
     /*
     |--------------------------------------------------------------------------
     | Admin - Customers
@@ -400,7 +377,6 @@ Route::middleware('auth:sanctum')->group(function () {
         '/admin/customers/{customer}',
         [CustomerController::class, 'show']
     );
-
 
     /*
     |--------------------------------------------------------------------------
@@ -431,7 +407,6 @@ Route::middleware('auth:sanctum')->group(function () {
         '/admin/chats/{chat}/close',
         [AdminChatController::class, 'close']
     );
-
 
     /*
     |--------------------------------------------------------------------------

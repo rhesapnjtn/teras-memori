@@ -46,10 +46,9 @@ class ChatController extends Controller
             [$email]
         )->first();
 
-        if (!$customer) {
+        if (! $customer) {
             return response()->json([
-                'message' =>
-                    'Data customer atau order tidak valid.',
+                'message' => 'Data customer atau order tidak valid.',
             ], 404);
         }
 
@@ -61,7 +60,6 @@ class ChatController extends Controller
             ],
         ]);
     }
-
 
     /*
     |--------------------------------------------------------------------------
@@ -89,7 +87,6 @@ class ChatController extends Controller
             $request->validated('order_number')
         );
 
-
         /*
         |--------------------------------------------------------------------------
         | Find Customer
@@ -101,20 +98,18 @@ class ChatController extends Controller
             [$email]
         )->first();
 
-
         /*
         |--------------------------------------------------------------------------
         | Do not reveal whether email exists
         |--------------------------------------------------------------------------
         */
 
-        if (!$customer) {
+        if (! $customer) {
             abort(
                 404,
                 'Data customer atau order tidak valid.'
             );
         }
-
 
         /*
         |--------------------------------------------------------------------------
@@ -132,20 +127,18 @@ class ChatController extends Controller
             )
             ->first();
 
-
         /*
         |--------------------------------------------------------------------------
         | Invalid Customer / Order
         |--------------------------------------------------------------------------
         */
 
-        if (!$order) {
+        if (! $order) {
             abort(
                 404,
                 'Data customer atau order tidak valid.'
             );
         }
-
 
         /*
         |--------------------------------------------------------------------------
@@ -164,14 +157,13 @@ class ChatController extends Controller
             ->latest()
             ->first();
 
-
         /*
         |--------------------------------------------------------------------------
         | Create Chat
         |--------------------------------------------------------------------------
         */
 
-        if (!$chat) {
+        if (! $chat) {
             $chat = Chat::create([
                 'customer_id' => $customer->id,
                 'public_token' => Str::uuid()->toString(),
@@ -179,19 +171,17 @@ class ChatController extends Controller
             ]);
         }
 
-
         /*
         |--------------------------------------------------------------------------
         | Ensure Public Token Exists
         |--------------------------------------------------------------------------
         */
 
-        if (!$chat->public_token) {
+        if (! $chat->public_token) {
             $chat->update([
                 'public_token' => Str::uuid()->toString(),
             ]);
         }
-
 
         /*
         |--------------------------------------------------------------------------
@@ -204,7 +194,6 @@ class ChatController extends Controller
             'messages',
         ]);
 
-
         /*
         |--------------------------------------------------------------------------
         | Return Chat
@@ -213,7 +202,6 @@ class ChatController extends Controller
 
         return new PublicChatResource($chat);
     }
-
 
     /*
     |--------------------------------------------------------------------------
@@ -253,7 +241,6 @@ class ChatController extends Controller
             $request->order_number
         );
 
-
         /*
         |--------------------------------------------------------------------------
         | Find Customer
@@ -265,20 +252,17 @@ class ChatController extends Controller
             [$email]
         )->first();
 
-
         /*
         |--------------------------------------------------------------------------
         | Do not reveal whether email exists
         |--------------------------------------------------------------------------
         */
 
-        if (!$customer) {
+        if (! $customer) {
             return response()->json([
-                'message' =>
-                    'Data customer atau order tidak valid.',
+                'message' => 'Data customer atau order tidak valid.',
             ], 404);
         }
-
 
         /*
         |--------------------------------------------------------------------------
@@ -296,13 +280,11 @@ class ChatController extends Controller
             )
             ->first();
 
-        if (!$order) {
+        if (! $order) {
             return response()->json([
-                'message' =>
-                    'Data customer atau order tidak valid.',
+                'message' => 'Data customer atau order tidak valid.',
             ], 404);
         }
-
 
         /*
         |--------------------------------------------------------------------------
@@ -317,14 +299,13 @@ class ChatController extends Controller
             ->latest()
             ->first();
 
-
         /*
         |--------------------------------------------------------------------------
         | Customer Has No Chat
         |--------------------------------------------------------------------------
         */
 
-        if (!$chat) {
+        if (! $chat) {
             return response()->json([
                 'customer' => [
                     'id' => $customer->id,
@@ -334,11 +315,9 @@ class ChatController extends Controller
 
                 'data' => null,
 
-                'message' =>
-                    'Customer belum memiliki percakapan.',
+                'message' => 'Customer belum memiliki percakapan.',
             ]);
         }
-
 
         /*
         |--------------------------------------------------------------------------
@@ -346,12 +325,11 @@ class ChatController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        if (!$chat->public_token) {
+        if (! $chat->public_token) {
             $chat->update([
                 'public_token' => Str::uuid()->toString(),
             ]);
         }
-
 
         /*
         |--------------------------------------------------------------------------
@@ -363,7 +341,6 @@ class ChatController extends Controller
             'customer',
             'messages',
         ]);
-
 
         /*
         |--------------------------------------------------------------------------
@@ -383,7 +360,6 @@ class ChatController extends Controller
             'public_token' => $chat->public_token,
         ]);
     }
-
 
     /*
     |--------------------------------------------------------------------------
@@ -407,7 +383,6 @@ class ChatController extends Controller
 
         return new PublicChatResource($chat);
     }
-
 
     /*
     |--------------------------------------------------------------------------
@@ -450,7 +425,6 @@ class ChatController extends Controller
         return new PublicChatResource($chat);
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | Authorize Public Chat
@@ -465,7 +439,7 @@ class ChatController extends Controller
             'X-Chat-Token'
         );
 
-        if (!$token) {
+        if (! $token) {
             abort(
                 403,
                 'Chat token tidak ditemukan.'
@@ -473,8 +447,8 @@ class ChatController extends Controller
         }
 
         if (
-            !$chat->public_token ||
-            !hash_equals(
+            ! $chat->public_token ||
+            ! hash_equals(
                 (string) $chat->public_token,
                 (string) $token
             )

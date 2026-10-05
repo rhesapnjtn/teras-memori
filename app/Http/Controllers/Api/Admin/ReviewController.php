@@ -46,7 +46,7 @@ class ReviewController extends Controller
         Review $review
     ): ReviewResource {
         $review->update([
-            'is_published' => !$review->is_published,
+            'is_published' => ! $review->is_published,
         ]);
 
         $review->load([

@@ -31,7 +31,7 @@ class ChatMessageSent implements ShouldBroadcastNow
             */
 
             new Channel(
-                'chat.' . $this->message->chat->public_token
+                'chat.'.$this->message->chat->public_token
             ),
         ];
 
@@ -45,7 +45,7 @@ class ChatMessageSent implements ShouldBroadcastNow
         */
 
         $channels[] = new PrivateChannel(
-            'admin-chat.' . $this->message->chat_id
+            'admin-chat.'.$this->message->chat_id
         );
 
         return $channels;

@@ -10,31 +10,31 @@ return new class extends Migration
      * Run the migrations.
      */
     public function up(): void
-{
-    Schema::create('chat_messages', function (Blueprint $table) {
-        $table->id();
+    {
+        Schema::create('chat_messages', function (Blueprint $table) {
+            $table->id();
 
-        $table->foreignId('chat_id')
-            ->constrained('chats')
-            ->cascadeOnDelete();
+            $table->foreignId('chat_id')
+                ->constrained('chats')
+                ->cascadeOnDelete();
 
-        $table->foreignId('user_id')
-            ->nullable()
-            ->constrained('users')
-            ->nullOnDelete();
+            $table->foreignId('user_id')
+                ->nullable()
+                ->constrained('users')
+                ->nullOnDelete();
 
-        $table->enum('sender_type', [
-            'customer',
-            'admin',
-        ]);
+            $table->enum('sender_type', [
+                'customer',
+                'admin',
+            ]);
 
-        $table->text('message');
+            $table->text('message');
 
-        $table->timestamp('read_at')->nullable();
+            $table->timestamp('read_at')->nullable();
 
-        $table->timestamps();
-    });
-}
+            $table->timestamps();
+        });
+    }
 
     /**
      * Reverse the migrations.

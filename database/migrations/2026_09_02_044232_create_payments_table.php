@@ -10,38 +10,38 @@ return new class extends Migration
      * Run the migrations.
      */
     public function up(): void
-{
-    Schema::create('payments', function (Blueprint $table) {
-        $table->id();
+    {
+        Schema::create('payments', function (Blueprint $table) {
+            $table->id();
 
-        $table->foreignId('order_id')
-            ->constrained('orders')
-            ->cascadeOnDelete();
+            $table->foreignId('order_id')
+                ->constrained('orders')
+                ->cascadeOnDelete();
 
-        $table->decimal('amount', 12, 2);
+            $table->decimal('amount', 12, 2);
 
-        $table->enum('method', [
-            'bank_transfer',
-            'e_wallet',
-            'qris',
-            'other',
-        ])->nullable();
+            $table->enum('method', [
+                'bank_transfer',
+                'e_wallet',
+                'qris',
+                'other',
+            ])->nullable();
 
-        $table->enum('status', [
-            'pending',
-            'paid',
-            'failed',
-            'expired',
-            'refunded',
-        ])->default('pending');
+            $table->enum('status', [
+                'pending',
+                'paid',
+                'failed',
+                'expired',
+                'refunded',
+            ])->default('pending');
 
-        $table->string('transaction_id')->nullable()->unique();
+            $table->string('transaction_id')->nullable()->unique();
 
-        $table->timestamp('paid_at')->nullable();
+            $table->timestamp('paid_at')->nullable();
 
-        $table->timestamps();
-    });
-}
+            $table->timestamps();
+        });
+    }
 
     /**
      * Reverse the migrations.

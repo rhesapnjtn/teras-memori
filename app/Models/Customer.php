@@ -1,9 +1,7 @@
 <?php
 
 namespace App\Models;
-use App\Models\Order;
-use App\Models\Review;
-use App\Models\Chat;
+
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 

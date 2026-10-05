@@ -28,7 +28,7 @@ class PortfolioResource extends JsonResource
                     )
                         ? $this->image
                         : asset(
-                            'storage/' . ltrim(
+                            'storage/'.ltrim(
                                 $this->image,
                                 '/'
                             )

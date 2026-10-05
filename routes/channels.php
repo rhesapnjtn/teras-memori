@@ -16,7 +16,6 @@ Broadcast::channel('chat.{chatId}', function ($user, $chatId) {
     return Chat::where('id', $chatId)->exists();
 });
 
-
 /*
 |--------------------------------------------------------------------------
 | Admin Chat
@@ -27,7 +26,7 @@ Broadcast::channel('chat.{chatId}', function ($user, $chatId) {
 */
 
 Broadcast::channel('admin-chat.{chatId}', function ($user, $chatId) {
-    if (!$user) {
+    if (! $user) {
         return false;
     }
 
