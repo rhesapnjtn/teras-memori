@@ -38,7 +38,7 @@ class PortfolioController extends Controller
     public function show(Portfolio $portfolio): PortfolioResource
     {
         abort_if(
-            !$portfolio->is_published,
+            ! $portfolio->is_published,
             404,
             'Portfolio not found.'
         );
@@ -147,7 +147,7 @@ class PortfolioController extends Controller
 
             if (
                 $portfolio->image &&
-                !Str::startsWith(
+                ! Str::startsWith(
                     $portfolio->image,
                     [
                         'http://',
@@ -196,7 +196,7 @@ class PortfolioController extends Controller
 
         if (
             $portfolio->image &&
-            !Str::startsWith(
+            ! Str::startsWith(
                 $portfolio->image,
                 [
                     'http://',

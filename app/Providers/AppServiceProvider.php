@@ -34,8 +34,8 @@ class AppServiceProvider extends ServiceProvider
                 return Limit::perMinute(20)
                     ->by(
                         $request->ip()
-                        . '|'
-                        . strtolower(
+                        .'|'
+                        .strtolower(
                             trim(
                                 (string) $request->input('email')
                             )
@@ -50,8 +50,8 @@ class AppServiceProvider extends ServiceProvider
                 return Limit::perMinute(10)
                     ->by(
                         $request->ip()
-                        . '|'
-                        . strtolower(
+                        .'|'
+                        .strtolower(
                             trim(
                                 (string) $request->input('email')
                             )
@@ -66,8 +66,8 @@ class AppServiceProvider extends ServiceProvider
                 return Limit::perMinute(20)
                     ->by(
                         $request->ip()
-                        . '|'
-                        . strtolower(
+                        .'|'
+                        .strtolower(
                             trim(
                                 (string) $request->input('email')
                             )
@@ -82,8 +82,8 @@ class AppServiceProvider extends ServiceProvider
                 return Limit::perMinute(30)
                     ->by(
                         $request->ip()
-                        . '|'
-                        . $request->header('X-Chat-Token')
+                        .'|'
+                        .$request->header('X-Chat-Token')
                     );
             }
         );
@@ -94,8 +94,8 @@ class AppServiceProvider extends ServiceProvider
                 return Limit::perMinute(20)
                     ->by(
                         $request->ip()
-                        . '|'
-                        . $request->header('X-Chat-Token')
+                        .'|'
+                        .$request->header('X-Chat-Token')
                     );
             }
         );

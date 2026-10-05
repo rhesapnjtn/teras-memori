@@ -10,22 +10,22 @@ return new class extends Migration
      * Run the migrations.
      */
     public function up(): void
-{
-    Schema::create('chats', function (Blueprint $table) {
-        $table->id();
+    {
+        Schema::create('chats', function (Blueprint $table) {
+            $table->id();
 
-        $table->foreignId('customer_id')
-            ->constrained('customers')
-            ->cascadeOnDelete();
+            $table->foreignId('customer_id')
+                ->constrained('customers')
+                ->cascadeOnDelete();
 
-        $table->enum('status', [
-            'open',
-            'closed',
-        ])->default('open');
+            $table->enum('status', [
+                'open',
+                'closed',
+            ])->default('open');
 
-        $table->timestamps();
-    });
-}
+            $table->timestamps();
+        });
+    }
 
     /**
      * Reverse the migrations.

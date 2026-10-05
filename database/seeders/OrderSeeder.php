@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 use App\Models\Customer;
 use App\Models\Order;
-use App\Models\Payment;
 use App\Models\Service;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
@@ -49,7 +48,7 @@ class OrderSeeder extends Seeder
 
             $order = Order::create([
                 'customer_id' => $customer->id,
-                'order_number' => 'TM-' . now()->format('YmdHis'),
+                'order_number' => 'TM-'.now()->format('YmdHis'),
                 'status' => 'processing',
                 'total_amount' => $total,
                 'notes' => 'Order contoh untuk testing.',
@@ -71,7 +70,7 @@ class OrderSeeder extends Seeder
                 'amount' => $total,
                 'method' => 'qris',
                 'status' => 'paid',
-                'transaction_id' => 'TEST-' . uniqid(),
+                'transaction_id' => 'TEST-'.uniqid(),
                 'paid_at' => now(),
             ]);
         });

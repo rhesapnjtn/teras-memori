@@ -31,7 +31,7 @@ class ServiceController extends Controller
     public function show(Service $service): ServiceResource
     {
         abort_if(
-            !$service->is_active,
+            ! $service->is_active,
             404,
             'Service not found.'
         );

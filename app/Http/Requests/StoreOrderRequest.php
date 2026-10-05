@@ -43,7 +43,6 @@ class StoreOrderRequest extends FormRequest
                 'string',
             ],
 
-
             /*
             |--------------------------------------------------------------------------
             | ORDER ITEMS
@@ -69,7 +68,6 @@ class StoreOrderRequest extends FormRequest
                 'max:100',
             ],
 
-
             /*
             |--------------------------------------------------------------------------
             | NOTES
@@ -81,7 +79,6 @@ class StoreOrderRequest extends FormRequest
                 'string',
                 'max:2000',
             ],
-
 
             /*
             |--------------------------------------------------------------------------
@@ -120,12 +117,9 @@ class StoreOrderRequest extends FormRequest
             |--------------------------------------------------------------------------
             */
 
-            'customer.name.required' =>
-                'Nama customer wajib diisi.',
+            'customer.name.required' => 'Nama customer wajib diisi.',
 
-            'customer.email.email' =>
-                'Format email tidak valid.',
-
+            'customer.email.email' => 'Format email tidak valid.',
 
             /*
             |--------------------------------------------------------------------------
@@ -133,21 +127,15 @@ class StoreOrderRequest extends FormRequest
             |--------------------------------------------------------------------------
             */
 
-            'items.required' =>
-                'Minimal satu service harus dipilih.',
+            'items.required' => 'Minimal satu service harus dipilih.',
 
-            'items.min' =>
-                'Minimal satu service harus dipilih.',
+            'items.min' => 'Minimal satu service harus dipilih.',
 
-            'items.*.service_id.exists' =>
-                'Service tidak ditemukan.',
+            'items.*.service_id.exists' => 'Service tidak ditemukan.',
 
-            'items.*.quantity.min' =>
-                'Quantity minimal 1.',
+            'items.*.quantity.min' => 'Quantity minimal 1.',
 
-            'items.*.quantity.max' =>
-                'Quantity maksimal 100.',
-
+            'items.*.quantity.max' => 'Quantity maksimal 100.',
 
             /*
             |--------------------------------------------------------------------------
@@ -155,23 +143,17 @@ class StoreOrderRequest extends FormRequest
             |--------------------------------------------------------------------------
             */
 
-            'files.array' =>
-                'Format file tidak valid.',
+            'files.array' => 'Format file tidak valid.',
 
-            'files.max' =>
-                'Maksimal 10 foto dapat diupload.',
+            'files.max' => 'Maksimal 10 foto dapat diupload.',
 
-            'files.*.file' =>
-                'File yang diupload tidak valid.',
+            'files.*.file' => 'File yang diupload tidak valid.',
 
-            'files.*.image' =>
-                'File harus berupa gambar.',
+            'files.*.image' => 'File harus berupa gambar.',
 
-            'files.*.mimes' =>
-                'Format foto harus JPG, JPEG, PNG, atau WEBP.',
+            'files.*.mimes' => 'Format foto harus JPG, JPEG, PNG, atau WEBP.',
 
-            'files.*.max' =>
-                'Ukuran setiap foto maksimal 5 MB.',
+            'files.*.max' => 'Ukuran setiap foto maksimal 5 MB.',
         ];
     }
 }

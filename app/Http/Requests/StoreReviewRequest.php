@@ -48,13 +48,13 @@ class StoreReviewRequest extends FormRequest
             $customerId = $this->input('customer_id');
             $orderId = $this->input('order_id');
 
-            if (!$customerId || !$orderId) {
+            if (! $customerId || ! $orderId) {
                 return;
             }
 
             $order = Order::with('review')->find($orderId);
 
-            if (!$order) {
+            if (! $order) {
                 return;
             }
 

@@ -37,7 +37,6 @@ class OrderController extends Controller
         return OrderResource::collection($orders);
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | STORE
@@ -58,7 +57,7 @@ class OrderController extends Controller
 
             $customerData = $validated['customer'];
 
-            if (!empty($customerData['email'])) {
+            if (! empty($customerData['email'])) {
 
                 $customer = Customer::updateOrCreate(
                     ['email' => $customerData['email']],
@@ -70,7 +69,6 @@ class OrderController extends Controller
                 $customer = Customer::create($customerData);
 
             }
-
 
             /*
             |--------------------------------------------------------------------------
@@ -97,7 +95,6 @@ class OrderController extends Controller
 
             }
 
-
             /*
             |--------------------------------------------------------------------------
             | ORDER NUMBER
@@ -107,14 +104,13 @@ class OrderController extends Controller
             do {
 
                 $orderNumber = 'TM-'
-                    . now()->format('YmdHis')
-                    . '-'
-                    . Str::upper(Str::random(4));
+                    .now()->format('YmdHis')
+                    .'-'
+                    .Str::upper(Str::random(4));
 
             } while (
                 Order::where('order_number', $orderNumber)->exists()
             );
-
 
             /*
             |--------------------------------------------------------------------------
@@ -129,7 +125,6 @@ class OrderController extends Controller
                 'total_amount' => 0,
                 'notes' => $validated['notes'] ?? null,
             ]);
-
 
             /*
             |--------------------------------------------------------------------------
@@ -157,7 +152,6 @@ class OrderController extends Controller
                 $total += $subtotal;
             }
 
-
             /*
             |--------------------------------------------------------------------------
             | UPDATE TOTAL
@@ -167,7 +161,6 @@ class OrderController extends Controller
             $order->update([
                 'total_amount' => $total,
             ]);
-
 
             /*
             |--------------------------------------------------------------------------
@@ -180,7 +173,6 @@ class OrderController extends Controller
                 'method' => null,
                 'status' => 'pending',
             ]);
-
 
             /*
             |--------------------------------------------------------------------------
@@ -209,7 +201,6 @@ class OrderController extends Controller
             return $order;
         });
 
-
         /*
         |--------------------------------------------------------------------------
         | LOAD RELATIONSHIPS
@@ -226,7 +217,6 @@ class OrderController extends Controller
 
         return new OrderResource($order);
     }
-
 
     /*
     |--------------------------------------------------------------------------
@@ -258,7 +248,6 @@ class OrderController extends Controller
             ],
         ]);
 
-
         /*
         |--------------------------------------------------------------------------
         | FIND ORDER
@@ -287,14 +276,13 @@ class OrderController extends Controller
             })
             ->first();
 
-
         /*
         |--------------------------------------------------------------------------
         | ORDER NOT FOUND
         |--------------------------------------------------------------------------
         */
 
-        if (!$order) {
+        if (! $order) {
 
             abort(
                 404,
@@ -302,7 +290,6 @@ class OrderController extends Controller
             );
 
         }
-
 
         /*
         |--------------------------------------------------------------------------
@@ -312,7 +299,6 @@ class OrderController extends Controller
 
         return new OrderResource($order);
     }
-
 
     /*
     |--------------------------------------------------------------------------

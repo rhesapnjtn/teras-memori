@@ -93,7 +93,7 @@ class OrderController extends Controller
 
             $payment = $order->payment;
 
-            if (!$payment) {
+            if (! $payment) {
                 abort(
                     404,
                     'Payment untuk order ini tidak ditemukan.'
