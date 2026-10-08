@@ -365,7 +365,7 @@ const submitOrder = async () => {
     // Check authentication
     if (!auth.isAuthenticated) {
         errorMessage.value = 'Silakan login terlebih dahulu untuk membuat order.'
-        router.push({ name: 'login' })
+        router.push({ name: 'login', query: { redirect: router.currentRoute.value.fullPath } })
         return
     }
 
@@ -598,7 +598,11 @@ const submitOrder = async () => {
 |--------------------------------------------------------------------------
 */
 
-onMounted(() => {
+onMounted(async () => {
+    if (!auth.isAuthenticated) {
+        router.push({ name: 'login', query: { redirect: router.currentRoute.value.fullPath } })
+        return
+    }
     fetchServices()
 })
 </script>

@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\Admin\ReviewController as AdminReviewController;
 use App\Http\Controllers\Api\Admin\RoleController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ChatController;
+use App\Http\Controllers\Api\MemberController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\PortfolioController;
 use App\Http\Controllers\Api\ReviewController;
@@ -277,6 +278,43 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get(
         '/user',
         [AuthController::class, 'user']
+    );
+
+    /*
+    |--------------------------------------------------------------------------
+    | Profile
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get(
+        '/profile',
+        [AuthController::class, 'profile']
+    );
+
+    Route::put(
+        '/profile',
+        [AuthController::class, 'updateProfile']
+    );
+
+    Route::post(
+        '/profile/avatar',
+        [AuthController::class, 'updateAvatar']
+    );
+
+    /*
+    |--------------------------------------------------------------------------
+    | Member
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get(
+        '/member',
+        [MemberController::class, 'show']
+    );
+
+    Route::get(
+        '/member/transactions',
+        [MemberController::class, 'transactions']
     );
 });
 

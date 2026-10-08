@@ -1,9 +1,10 @@
 <script setup>
 import { reactive, ref } from 'vue'
-import { RouterLink, useRouter } from 'vue-router'
+import { RouterLink, useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '../../stores/auth'
 
 const router = useRouter()
+const route = useRoute()
 const auth = useAuthStore()
 
 const form = reactive({
@@ -26,9 +27,9 @@ const submit = async () => {
     try {
         await auth.register(form)
 
-        router.push({
-            name: 'home',
-        })
+        const redirect = route.query.redirect
+
+        router.push(redirect || { name: 'home' })
     } catch (error) {
         if (error.response?.status === 422) {
             const errors = error.response.data?.errors

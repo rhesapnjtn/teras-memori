@@ -74,6 +74,30 @@ const routes = [
                 name: 'track-order',
                 component: () => import('../pages/public/TrackOrder.vue'),
 },
+            {
+                path: 'profile',
+                name: 'profile',
+                component: () => import('../pages/public/Profile.vue'),
+                meta: {
+                    requiresAuth: true,
+                },
+            },
+            {
+                path: 'member',
+                name: 'member',
+                component: () => import('../pages/public/Member.vue'),
+                meta: {
+                    requiresAuth: true,
+                },
+            },
+            {
+                path: 'order-history',
+                name: 'order-history',
+                component: () => import('../pages/public/OrderHistory.vue'),
+                meta: {
+                    requiresAuth: true,
+                },
+            },
         ],
         
     },
@@ -254,7 +278,8 @@ router.beforeEach((to) => {
 
     if (
         (to.name === 'login' || to.name === 'register') &&
-        auth.isAuthenticated
+        auth.isAuthenticated &&
+        !to.query.redirect
     ) {
         const roles = auth.user?.roles?.map(
             (r) => r.name
