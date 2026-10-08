@@ -7,6 +7,8 @@ use App\Http\Requests\UpdateOrderStatusRequest;
 use App\Http\Requests\UpdatePaymentStatusRequest;
 use App\Http\Resources\OrderResource;
 use App\Models\Order;
+use App\Models\PointTransaction;
+use App\Models\User;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\DB;
 
@@ -117,17 +119,92 @@ class OrderController extends Controller
             /*
             |--------------------------------------------------------------------------
             | Jika payment menjadi PAID
-            | otomatis ubah order pending → confirmed
+            | otomatis ubah order pending → confirmed & award points
             |--------------------------------------------------------------------------
             */
 
+            $wasJustPaid = ($data['status'] === 'paid');
+
             if (
-                $data['status'] === 'paid' &&
+                $wasJustPaid &&
                 $order->status === 'pending'
             ) {
                 $order->update([
                     'status' => 'confirmed',
                 ]);
+            }
+
+            // Award points if just paid and not awarded before
+            if ($wasJustPaid && $payment) {
+                $alreadyAwarded = PointTransaction::where('order_id', $order->id)
+                    ->where('payment_id', $payment->id)
+                    ->where('type', 'earn')
+                    ->exists();
+
+                if (! $alreadyAwarded) {
+                    $customer = $order->customer;
+                    $user = null;
+
+                    if ($customer) {
+                        $user = User::where('email', strtolower(trim($customer->email)))->first();
+                    }
+
+                    if ($user) {
+                        $totalAmount = (float) ($order->total_amount ?? $payment->amount ?? 0);
+                        $basePoints = (int) floor($totalAmount / 10000);
+
+                        if ($basePoints < 0) {
+                            $basePoints = 0;
+                        }
+
+                        $multiplier = match ($user->member_tier) {
+                            'silver' => 1.2,
+                            'gold' => 1.5,
+                            'platinum' => 2.0,
+                            default => 1.0,
+                        };
+
+                        $earnedPoints = (int) floor($basePoints * $multiplier);
+                        if ($earnedPoints === 0 && $totalAmount > 0) {
+                            $earnedPoints = 1;
+                        }
+
+                        if ($earnedPoints !== 0) {
+                            DB::transaction(function () use ($user, $order, $payment, $earnedPoints, $totalAmount) {
+                                PointTransaction::create([
+                                    'user_id' => $user->id,
+                                    'order_id' => $order->id,
+                                    'payment_id' => $payment->id,
+                                    'points' => $earnedPoints,
+                                    'type' => 'earn',
+                                    'description' => sprintf('Earned points for order %s (Rp %s)', $order->order_number, number_format($totalAmount, 0, ',', '.')),
+                                ]);
+
+                                $newPoints = $user->points + $earnedPoints;
+                                $user->points = $newPoints;
+
+                                if (! $user->is_member) {
+                                    $user->is_member = true;
+                                    if (! $user->member_joined_at) {
+                                        $user->member_joined_at = now();
+                                    }
+                                }
+
+                                if ($newPoints >= 10000) {
+                                    $user->member_tier = 'platinum';
+                                } elseif ($newPoints >= 5000) {
+                                    $user->member_tier = 'gold';
+                                } elseif ($newPoints >= 1000) {
+                                    $user->member_tier = 'silver';
+                                } else {
+                                    $user->member_tier = 'bronze';
+                                }
+
+                                $user->save();
+                            });
+                        }
+                    }
+                }
             }
 
             /*

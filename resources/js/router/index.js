@@ -73,12 +73,34 @@ const routes = [
                 path: 'track-order',
                 name: 'track-order',
                 component: () => import('../pages/public/TrackOrder.vue'),
-},
+            },
+            {
+                path: 'profile',
+                name: 'profile',
+                component: () => import('../pages/public/Profile.vue'),
+                meta: {
+                    requiresAuth: true,
+                },
+            },
+            {
+                path: 'member',
+                name: 'member',
+                component: () => import('../pages/public/Member.vue'),
+                meta: {
+                    requiresAuth: true,
+                },
+            },
+            {
+                path: 'order-history',
+                name: 'order-history',
+                component: () => import('../pages/public/OrderHistory.vue'),
+                meta: {
+                    requiresAuth: true,
+                },
+            },
         ],
-        
-    },
-    
 
+    },
 
     /*
     |--------------------------------------------------------------------------
@@ -93,6 +115,13 @@ const routes = [
             import('../pages/auth/Login.vue'),
     },
 
+    {
+        path: '/register',
+        name: 'register',
+        component: () =>
+            import('../pages/auth/Register.vue'),
+    },
+
 
     /*
     |--------------------------------------------------------------------------
@@ -101,13 +130,14 @@ const routes = [
     */
 
     {
-        path: '/dashboard',
+        path: '/admin',
 
         component: () =>
             import('../layouts/DashboardLayout.vue'),
 
         meta: {
             requiresAuth: true,
+            requiresAdmin: true,
         },
 
         children: [
@@ -158,6 +188,13 @@ const routes = [
                 name: 'dashboard.chat',
                 component: () =>
                     import('../pages/dashboard/Chat.vue'),
+            },
+
+            {
+                path: 'roles',
+                name: 'dashboard.roles',
+                component: () =>
+                    import('../pages/dashboard/Roles.vue'),
             },
         ],
     },
@@ -210,17 +247,49 @@ router.beforeEach((to) => {
 
     /*
     |--------------------------------------------------------------------------
-    | Prevent authenticated user from login page
+    | Admin only
+    |--------------------------------------------------------------------------
+    */
+
+    if (to.meta.requiresAdmin) {
+        const roles = auth.user?.roles?.map(
+            (r) => r.name
+        ) || []
+
+        const isStaff =
+            roles.includes('admin') ||
+            roles.includes('superadmin')
+
+        if (!isStaff) {
+            return {
+                name: 'home',
+            }
+        }
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Prevent authenticated user from login/register page
     |--------------------------------------------------------------------------
     */
 
     if (
-        to.name === 'login' &&
+        (to.name === 'login' || to.name === 'register') &&
         auth.isAuthenticated
     ) {
-        return {
-            name: 'dashboard',
+        const roles = auth.user?.roles?.map(
+            (r) => r.name
+        ) || []
+
+        if (
+            roles.includes('admin') ||
+            roles.includes('superadmin')
+        ) {
+            return { name: 'dashboard' }
         }
+
+        return { name: 'home' }
     }
 
 

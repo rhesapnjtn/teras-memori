@@ -10,7 +10,11 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        User::updateOrCreate(
+        $this->call([
+            RoleSeeder::class,
+        ]);
+
+        $admin = User::updateOrCreate(
             [
                 'email' => 'admin@teras-memori.test',
             ],
@@ -19,6 +23,8 @@ class DatabaseSeeder extends Seeder
                 'password' => Hash::make('password'),
             ]
         );
+
+        $admin->syncRoles(['admin']);
 
         $this->call([
             ServiceSeeder::class,

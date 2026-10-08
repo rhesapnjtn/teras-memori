@@ -2,21 +2,100 @@
 
 on:
   push:
-    branches: [main, develop]
+    branches:
+      - main
+      - develop
+
   pull_request:
-    branches: [main, develop]
+    branches:
+      - main
+      - develop
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  tests:
+  # ============================================================
+  # CODE QUALITY
+  # ============================================================
+  lint:
+    name: Laravel Pint
     runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, dom, fileinfo
+          coverage: none
+          tools: composer
+
+      - name: Validate Composer
+        run: composer validate --strict
+
+      - name: Install PHP dependencies
+        uses: ramsey/composer-install@v3
+        with:
+          dependency-versions: locked
+
+      - name: Run Laravel Pint
+        run: vendor/bin/pint --test
+
+
+  # ============================================================
+  # FRONTEND
+  # ============================================================
+  frontend:
+    name: Frontend Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install Node dependencies
+        run: npm ci
+
+      - name: Build frontend assets
+        run: npm run build
+
+      - name: Upload frontend build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-build
+          path: public/build
+          retention-days: 1
+
+
+  # ============================================================
+  # PHP TESTS
+  # ============================================================
+  tests:
+    name: PHP ${{ matrix.php-version }}
+    runs-on: ubuntu-latest
+    needs: frontend
 
     strategy:
       fail-fast: false
-      matrix:
-        php-version: ['8.2', '8.3']
-        node-version: ['20.x']
 
-    name: PHP ${{ matrix.php-version }} - Node ${{ matrix.node-version }}
+      matrix:
+        php-version:
+          - '8.2'
+          - '8.3'
 
     steps:
       - name: Checkout code
@@ -26,57 +105,58 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php-version }}
-          extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, bcmath, soap, intl, gd, exif, iconv
+          extensions: >
+            dom,
+            curl,
+            libxml,
+            mbstring,
+            zip,
+            pcntl,
+            pdo,
+            sqlite,
+            pdo_sqlite,
+            bcmath,
+            soap,
+            intl,
+            gd,
+            exif,
+            iconv
           coverage: none
+          tools: composer
 
-      - name: Copy .env
-        run: php -r "file_exists('.env') || copy('.env.example', '.env');"
+      - name: Validate Composer
+        run: composer validate --strict
 
       - name: Install PHP dependencies
-        run: composer install --prefer-dist --no-interaction --no-progress
-
-      - name: Generate application key
-        run: php artisan key:generate
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: ramsey/composer-install@v3
         with:
-          node-version: ${{ matrix.node-version }}
-          cache: 'npm'
+          dependency-versions: locked
 
-      - name: Install Node dependencies
-        run: npm ci
-
-      - name: Build frontend assets
-        run: npm run build
-
-      - name: Prepare Laravel permissions
-        run: chmod -R 775 storage bootstrap/cache
-
-      - name: Run PHPUnit tests
-        run: vendor/bin/phpunit --testdox
-
-      - name: Check Laravel Pint (code style)
-        run: vendor/bin/pint --test
-
-  # Optional: add lint job separately if needed
-  lint:
-    runs-on: ubuntu-latest
-    name: Code Quality
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
+      - name: Download frontend build artifacts
+        uses: actions/download-artifact@v4
         with:
-          php-version: '8.2'
-          extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite
-          coverage: none
+          name: frontend-build
+          path: public/build
 
-      - name: Install PHP dependencies
-        run: composer install --prefer-dist --no-interaction --no-progress
+      - name: Verify frontend build artifacts
+        run: |
+          ls -la public/build/
+          test -f public/build/manifest.json && echo "manifest.json exists" || echo "manifest.json MISSING"
 
-      - name: Run Laravel Pint
-        run: vendor/bin/pint --test
+      - name: Prepare environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      - name: Prepare Laravel directories
+        run: |
+          mkdir -p storage/framework/cache
+          mkdir -p storage/framework/sessions
+          mkdir -p storage/framework/views
+          mkdir -p bootstrap/cache
+
+      - name: Run database migrations
+        run: php artisan migrate --force
+
+      - name: Run Laravel tests
+        run: php artisan test --testdox

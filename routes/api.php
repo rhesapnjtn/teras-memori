@@ -4,10 +4,13 @@ use App\Http\Controllers\Api\Admin\ChatController as AdminChatController;
 use App\Http\Controllers\Api\Admin\CustomerController;
 use App\Http\Controllers\Api\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Api\Admin\ReviewController as AdminReviewController;
+use App\Http\Controllers\Api\Admin\RoleController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ChatController;
+use App\Http\Controllers\Api\MemberController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\PortfolioController;
+use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\ReviewController;
 use App\Http\Controllers\Api\ServiceController;
 use Illuminate\Support\Facades\Route;
@@ -65,7 +68,7 @@ Route::get(
 Route::post(
     '/orders',
     [OrderController::class, 'store']
-);
+)->middleware('auth:sanctum');
 
 /*
 |--------------------------------------------------------------------------
@@ -245,13 +248,17 @@ Route::post(
     [AuthController::class, 'login']
 );
 
+Route::post(
+    '/register',
+    [AuthController::class, 'register']
+);
+
 /*
 |--------------------------------------------------------------------------
 | Authenticated
 |--------------------------------------------------------------------------
 |
 | Semua route di bawah ini membutuhkan:
-|
 | auth:sanctum
 |
 */
@@ -273,6 +280,46 @@ Route::middleware('auth:sanctum')->group(function () {
         '/user',
         [AuthController::class, 'user']
     );
+
+    Route::get(
+        '/profile',
+        [ProfileController::class, 'show']
+    );
+
+    Route::put(
+        '/profile',
+        [ProfileController::class, 'update']
+    );
+
+    Route::post(
+        '/profile/avatar',
+        [ProfileController::class, 'uploadAvatar']
+    );
+
+    Route::get(
+        '/member',
+        [MemberController::class, 'show']
+    );
+
+    Route::get(
+        '/member/transactions',
+        [MemberController::class, 'transactions']
+    );
+});
+
+/*
+|--------------------------------------------------------------------------
+| Admin
+|--------------------------------------------------------------------------
+|
+| Semua route admin membutuhkan:
+|
+| - auth:sanctum
+| - role admin / superadmin
+|
+*/
+
+Route::middleware(['auth:sanctum', 'admin'])->group(function () {
 
     /*
     |--------------------------------------------------------------------------
@@ -406,6 +453,37 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch(
         '/admin/chats/{chat}/close',
         [AdminChatController::class, 'close']
+    );
+
+    /*
+    |--------------------------------------------------------------------------
+    | Admin - Roles
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get(
+        '/admin/roles',
+        [RoleController::class, 'index']
+    );
+
+    Route::post(
+        '/admin/roles',
+        [RoleController::class, 'store']
+    );
+
+    Route::get(
+        '/admin/roles/{role}',
+        [RoleController::class, 'show']
+    );
+
+    Route::put(
+        '/admin/roles/{role}',
+        [RoleController::class, 'update']
+    );
+
+    Route::delete(
+        '/admin/roles/{role}',
+        [RoleController::class, 'destroy']
     );
 
     /*

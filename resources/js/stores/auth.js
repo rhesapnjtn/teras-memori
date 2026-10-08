@@ -25,6 +25,49 @@ export const useAuthStore = defineStore('auth', {
     actions: {
         /*
         |--------------------------------------------------------------------------
+        | Register
+        |--------------------------------------------------------------------------
+        */
+
+        async register(data) {
+            this.loading = true
+
+            try {
+                const response = await api.post(
+                    '/register',
+                    data
+                )
+
+                this.token =
+                    response.data.token
+
+                this.user =
+                    response.data.user
+
+                localStorage.setItem(
+                    'auth_token',
+                    this.token
+                )
+
+                localStorage.setItem(
+                    'auth_user',
+                    JSON.stringify(this.user)
+                )
+
+                this.initialized = true
+
+                return response.data
+            } catch (error) {
+                this.clearAuth()
+
+                throw error
+            } finally {
+                this.loading = false
+            }
+        },
+
+        /*
+        |--------------------------------------------------------------------------
         | Login
         |--------------------------------------------------------------------------
         */

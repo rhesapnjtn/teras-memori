@@ -7,8 +7,10 @@ const router = useRouter()
 const auth = useAuthStore()
 
 const form = reactive({
+    name: '',
     email: '',
     password: '',
+    password_confirmation: '',
 })
 
 const errorMessage = ref('')
@@ -16,25 +18,32 @@ const errorMessage = ref('')
 const submit = async () => {
     errorMessage.value = ''
 
+    if (form.password !== form.password_confirmation) {
+        errorMessage.value = 'Konfirmasi password tidak cocok.'
+        return
+    }
+
     try {
-        const response = await auth.login(form)
+        await auth.register(form)
 
-        const roles = response.user?.roles?.map(
-            (r) => r.name
-        ) || []
-
-        if (
-            roles.includes('admin') ||
-            roles.includes('superadmin')
-        ) {
-            router.push({ name: 'dashboard' })
-        } else {
-            router.push({ name: 'home' })
-        }
+        router.push({
+            name: 'home',
+        })
     } catch (error) {
-        errorMessage.value =
-            error.response?.data?.message ||
-            'Email atau password tidak sesuai.'
+        if (error.response?.status === 422) {
+            const errors = error.response.data?.errors
+            const firstError = errors
+                ? Object.values(errors)[0]?.[0]
+                : null
+
+            errorMessage.value =
+                firstError ||
+                'Data yang dikirim tidak valid.'
+        } else {
+            errorMessage.value =
+                error.response?.data?.message ||
+                'Registrasi gagal. Silakan coba lagi.'
+        }
     }
 }
 </script>
@@ -134,7 +143,7 @@ const submit = async () => {
 
 
         <!-- ========================================= -->
-        <!-- LOGIN CONTENT -->
+        <!-- REGISTER CONTENT -->
         <!-- ========================================= -->
 
         <section
@@ -167,7 +176,6 @@ const submit = async () => {
                     "
                 >
 
-                    <!-- Decorative circles -->
                     <div
                         class="
                             pointer-events-none absolute -right-32 -top-32
@@ -215,7 +223,7 @@ const submit = async () => {
                                     tracking-[0.35em] text-[#F4A6B8]
                                 "
                             >
-                                Welcome back
+                                Join us
                             </div>
 
                             <h1
@@ -225,9 +233,9 @@ const submit = async () => {
                                     xl:text-8xl
                                 "
                             >
-                                BACK<br />
-                                <span class="text-white/15">TO</span><br />
-                                WORK.
+                                CREATE<br />
+                                <span class="text-white/15">YOUR</span><br />
+                                ACCOUNT.
                             </h1>
 
                         </div>
@@ -245,9 +253,9 @@ const submit = async () => {
                                 max-w-md text-sm leading-7 text-white/40
                             "
                         >
-                            The creative workspace behind Teras Memori.
-                            Manage projects, services, portfolios and
-                            everything that keeps the studio moving.
+                            Join Teras Memori and start managing
+                            your creative projects, orders, and
+                            everything that keeps your memories alive.
                         </p>
 
                         <div
@@ -271,7 +279,7 @@ const submit = async () => {
                                     tracking-[0.25em] text-[#F4A6B8]
                                 "
                             >
-                                TM / ADMIN
+                                TM / REGISTER
                             </span>
                         </div>
 
@@ -295,7 +303,7 @@ const submit = async () => {
                     <div class="mx-auto w-full max-w-[420px]">
 
                         <!-- Heading -->
-                        <div class="mb-12">
+                        <div class="mb-10">
 
                             <div
                                 class="
@@ -305,7 +313,7 @@ const submit = async () => {
                                 "
                             >
                                 <span class="h-px w-8 bg-[#E85D75]"></span>
-                                Admin access
+                                Create account
                             </div>
 
                             <h2
@@ -316,7 +324,7 @@ const submit = async () => {
                                 "
                             >
                                 SIGN<br />
-                                <span class="text-[#E85D75]">IN.</span>
+                                <span class="text-[#E85D75]">UP.</span>
                             </h2>
 
                             <p
@@ -325,7 +333,7 @@ const submit = async () => {
                                     text-[#191919]/40
                                 "
                             >
-                                Access your Teras Memori studio workspace.
+                                Daftarkan akun untuk mulai memesan layanan.
                             </p>
 
                         </div>
@@ -356,8 +364,44 @@ const submit = async () => {
                         <!-- Form -->
                         <form
                             @submit.prevent="submit"
-                            class="space-y-7"
+                            class="space-y-6"
                         >
+
+                            <!-- Name -->
+                            <div>
+
+                                <label
+                                    for="name"
+                                    class="
+                                        mb-3 block text-[9px] font-semibold
+                                        uppercase tracking-[0.3em]
+                                        text-[#191919]/35
+                                    "
+                                >
+                                    Full name
+                                </label>
+
+                                <input
+                                    id="name"
+                                    v-model="form.name"
+                                    type="text"
+                                    autocomplete="name"
+                                    placeholder="Your full name"
+                                    required
+                                    class="
+                                        w-full border-0 border-b
+                                        border-[#191919]/15
+                                        bg-transparent px-0 py-4
+                                        text-sm outline-none
+                                        placeholder:text-[#191919]/20
+                                        transition duration-300
+                                        focus:border-[#E85D75]
+                                        focus:ring-0
+                                    "
+                                />
+
+                            </div>
+
 
                             <!-- Email -->
                             <div>
@@ -378,7 +422,7 @@ const submit = async () => {
                                     v-model="form.email"
                                     type="email"
                                     autocomplete="email"
-                                    placeholder="admin@teras-memori.test"
+                                    placeholder="you@email.com"
                                     required
                                     class="
                                         w-full border-0 border-b
@@ -413,9 +457,47 @@ const submit = async () => {
                                     id="password"
                                     v-model="form.password"
                                     type="password"
-                                    autocomplete="current-password"
-                                    placeholder="••••••••"
+                                    autocomplete="new-password"
+                                    placeholder="Min. 8 characters"
                                     required
+                                    minlength="8"
+                                    class="
+                                        w-full border-0 border-b
+                                        border-[#191919]/15
+                                        bg-transparent px-0 py-4
+                                        text-sm outline-none
+                                        placeholder:text-[#191919]/20
+                                        transition duration-300
+                                        focus:border-[#E85D75]
+                                        focus:ring-0
+                                    "
+                                />
+
+                            </div>
+
+
+                            <!-- Password Confirmation -->
+                            <div>
+
+                                <label
+                                    for="password_confirmation"
+                                    class="
+                                        mb-3 block text-[9px] font-semibold
+                                        uppercase tracking-[0.3em]
+                                        text-[#191919]/35
+                                    "
+                                >
+                                    Confirm password
+                                </label>
+
+                                <input
+                                    id="password_confirmation"
+                                    v-model="form.password_confirmation"
+                                    type="password"
+                                    autocomplete="new-password"
+                                    placeholder="Repeat your password"
+                                    required
+                                    minlength="8"
                                     class="
                                         w-full border-0 border-b
                                         border-[#191919]/15
@@ -451,7 +533,7 @@ const submit = async () => {
                             >
 
                                 <span>
-                                    {{ auth.loading ? 'Signing in...' : 'Enter studio' }}
+                                    {{ auth.loading ? 'Creating account...' : 'Create account' }}
                                 </span>
 
                                 <span
@@ -472,7 +554,7 @@ const submit = async () => {
                         <!-- Footer note -->
                         <div
                             class="
-                                mt-12 border-t border-[#191919]/10
+                                mt-10 border-t border-[#191919]/10
                                 pt-6
                             "
                         >
@@ -483,16 +565,16 @@ const submit = async () => {
                                     text-[#191919]/40
                                 "
                             >
-                                Belum punya akun?
+                                Sudah punya akun?
 
                                 <RouterLink
-                                    :to="{ name: 'register' }"
+                                    :to="{ name: 'login' }"
                                     class="
                                         font-semibold text-[#E85D75]
                                         transition hover:underline
                                     "
                                 >
-                                    Daftar sekarang
+                                    Sign in
                                 </RouterLink>
 
                             </p>

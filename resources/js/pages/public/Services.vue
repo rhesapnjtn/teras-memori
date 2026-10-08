@@ -1,4 +1,3 @@
-```vue
 <script setup>
 import { onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
@@ -73,11 +72,11 @@ onMounted(fetchServices)
                         class="h-px w-12 bg-[#E85D75]"
                     ></span>
 
-                    <span
-                        class="text-[10px] uppercase tracking-[0.4em] text-[#191919]/45"
-                    >
-                        02 — Services
-                    </span>
+                <span
+                            class="text-[9px] font-bold uppercase tracking-[0.35em] text-[#E85D75]"
+                        >
+                            02 — Layanan Kami
+                        </span>
 
                 </div>
 
@@ -92,16 +91,16 @@ onMounted(fetchServices)
                         <h1
                             class="max-w-6xl text-[16vw] font-medium leading-[0.75] tracking-[-0.085em] sm:text-[13vw] lg:text-[10vw]"
                         >
-                            WE
+                            LAYANAN
                             <span class="text-[#191919]/15">
-                                EDIT.
+                                KAMI.
                             </span>
 
                             <br />
 
-                            WE
+                            TERAS
                             <span class="text-[#191919]/15">
-                                RESTORE.
+                                MEMORI.
                             </span>
                         </h1>
 
@@ -146,10 +145,10 @@ onMounted(fetchServices)
                     <p
                         class="max-w-2xl text-base leading-7 text-[#191919]/55 md:text-lg"
                     >
-                        From subtle corrections to complete restoration,
-                        every service is treated as a creative process —
-                        carefully crafted to preserve the character
-                        of your photograph.
+                        Mulai dari koreksi halus hingga restorasi lengkap,
+                        setiap layanan diperlakukan sebagai proses kreatif
+                        yang dirancang untuk menjaga karakter dan emosi
+                        di balik setiap foto.
                     </p>
 
 
@@ -193,9 +192,9 @@ onMounted(fetchServices)
                         <h2
                             class="mt-5 max-w-xl text-5xl font-medium leading-[0.95] tracking-[-0.055em] sm:text-6xl"
                         >
-                            The art of
+                            Seni menghidupkan
                             <span class="text-[#191919]/20">
-                                making images.
+                                setiap kenangan.
                             </span>
                         </h2>
 
@@ -205,9 +204,8 @@ onMounted(fetchServices)
                     <p
                         class="max-w-sm text-sm leading-6 text-[#191919]/40"
                     >
-                        Every photograph deserves attention.
-                        Choose the treatment that best fits
-                        your image.
+                        Setiap foto berhak mendapatkan perhatian.
+                        Pilih layanan yang paling sesuai untuk kebutuhan Anda.
                     </p>
 
                 </div>
@@ -375,7 +373,7 @@ onMounted(fetchServices)
                                     <p
                                         class="mt-2 text-sm text-[#191919]/60"
                                     >
-                                        {{ service.duration || 'On request' }}
+                                        {{ service.duration || 'Sesuai kebutuhan' }}
                                     </p>
 
                                 </div>
@@ -663,7 +661,7 @@ onMounted(fetchServices)
 
 
                         <RouterLink
-                            :to="{ name: 'order' }"
+                            :to="{ name: 'login' }"
                             class="group/button mt-10 inline-flex items-center gap-6 rounded-full bg-white px-8 py-5 text-xs font-semibold uppercase tracking-[0.2em] text-[#191919] transition duration-500 hover:scale-105"
                         >
 
@@ -709,4 +707,3 @@ onMounted(fetchServices)
 
     </div>
 </template>
-```

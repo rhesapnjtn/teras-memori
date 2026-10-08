@@ -35,7 +35,7 @@ class AuthController extends Controller
         return response()->json([
             'message' => 'Login berhasil.',
             'token' => $token,
-            'user' => $user,
+            'user' => $user->load('roles'),
         ]);
     }
 
@@ -53,5 +53,30 @@ class AuthController extends Controller
         return response()->json([
             'user' => $request->user(),
         ]);
+    }
+
+    public function register(Request $request)
+    {
+        $credentials = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'unique:users'],
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
+        ]);
+
+        $user = User::create([
+            'name' => $credentials['name'],
+            'email' => $credentials['email'],
+            'password' => Hash::make($credentials['password']),
+        ]);
+
+        $user->assignRole('customer');
+
+        $token = $user->createToken('admin-token')->plainTextToken;
+
+        return response()->json([
+            'message' => 'Registrasi berhasil.',
+            'token' => $token,
+            'user' => $user->load('roles'),
+        ], 201);
     }
 }

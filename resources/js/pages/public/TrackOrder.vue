@@ -859,7 +859,7 @@ const resetTracking = () => {
 
 
                     <RouterLink
-                        :to="{ name: 'order' }"
+                        :to="{ name: 'login' }"
                         class="inline-flex w-fit items-center gap-5 rounded-full bg-[#E85D75] px-7 py-4 text-xs font-semibold uppercase tracking-[0.2em] text-white transition hover:scale-105"
                     >
                         Start a project
