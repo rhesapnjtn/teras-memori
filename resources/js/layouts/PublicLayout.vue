@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import { RouterLink, RouterView, useRoute } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import api from '../services/api'
+import ChatWidget from '../components/ChatWidget.vue'
 
 const route = useRoute()
 const auth = useAuthStore()
@@ -715,5 +716,6 @@ const closeMobileMenu = () => {
 
         </footer>
 
+    <ChatWidget />
     </div>
 </template>
