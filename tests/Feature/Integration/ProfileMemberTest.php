@@ -34,6 +34,7 @@ class ProfileMemberTest extends TestCase
         $this->actingAs($user, 'sanctum')
             ->putJson('/api/profile', [
                 'name' => 'Updated Name',
+                'email' => $user->email,
                 'phone' => '081234567890',
                 'address' => 'Jl. Test',
             ])
