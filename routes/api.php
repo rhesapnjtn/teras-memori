@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\Admin\ChatController as AdminChatController;
 use App\Http\Controllers\Api\Admin\CustomerController;
 use App\Http\Controllers\Api\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Api\Admin\ReviewController as AdminReviewController;
+use App\Http\Controllers\Api\Admin\RoleController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ChatController;
 use App\Http\Controllers\Api\OrderController;
@@ -65,7 +66,7 @@ Route::get(
 Route::post(
     '/orders',
     [OrderController::class, 'store']
-);
+)->middleware('auth:sanctum');
 
 /*
 |--------------------------------------------------------------------------
@@ -245,13 +246,17 @@ Route::post(
     [AuthController::class, 'login']
 );
 
+Route::post(
+    '/register',
+    [AuthController::class, 'register']
+);
+
 /*
 |--------------------------------------------------------------------------
 | Authenticated
 |--------------------------------------------------------------------------
 |
 | Semua route di bawah ini membutuhkan:
-|
 | auth:sanctum
 |
 */
@@ -273,6 +278,21 @@ Route::middleware('auth:sanctum')->group(function () {
         '/user',
         [AuthController::class, 'user']
     );
+});
+
+/*
+|--------------------------------------------------------------------------
+| Admin
+|--------------------------------------------------------------------------
+|
+| Semua route admin membutuhkan:
+|
+| - auth:sanctum
+| - role admin / superadmin
+|
+*/
+
+Route::middleware(['auth:sanctum', 'admin'])->group(function () {
 
     /*
     |--------------------------------------------------------------------------
@@ -406,6 +426,37 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch(
         '/admin/chats/{chat}/close',
         [AdminChatController::class, 'close']
+    );
+
+    /*
+    |--------------------------------------------------------------------------
+    | Admin - Roles
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get(
+        '/admin/roles',
+        [RoleController::class, 'index']
+    );
+
+    Route::post(
+        '/admin/roles',
+        [RoleController::class, 'store']
+    );
+
+    Route::get(
+        '/admin/roles/{role}',
+        [RoleController::class, 'show']
+    );
+
+    Route::put(
+        '/admin/roles/{role}',
+        [RoleController::class, 'update']
+    );
+
+    Route::delete(
+        '/admin/roles/{role}',
+        [RoleController::class, 'destroy']
     );
 
     /*

@@ -1,4 +1,5 @@
-﻿import { onMounted, ref } from 'vue'
+﻿<script setup>
+import { onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import api from '../../services/api'
 import Testimonials from '../../components/landing/Testimonials.vue'
@@ -163,7 +164,7 @@ onMounted(fetchHomeData)
                             >
 
                                 <RouterLink
-                                    :to="{ name: 'order' }"
+                                    :to="{ name: 'login' }"
                                     class="group inline-flex items-center gap-4 rounded-full bg-[#191919] px-7 py-4 text-[10px] font-bold uppercase tracking-[0.25em] text-white transition duration-500 hover:bg-[#E85D75]"
                                 >
 
@@ -622,10 +623,7 @@ onMounted(fetchHomeData)
                                 v-for="(service, index) in services"
                                 :key="service.id"
                                 :to="{
-                                    name: 'order',
-                                    query: {
-                                        service: service.id,
-                                    },
+                                    name: 'login',
                                 }"
                                 class="group relative grid gap-5 border-b border-[#191919]/10 py-9 last:border-b-0 sm:grid-cols-[80px_1fr_auto] sm:items-center"
                             >
@@ -1320,7 +1318,7 @@ onMounted(fetchHomeData)
 
 
                         <RouterLink
-                            :to="{ name: 'order' }"
+                            :to="{ name: 'login' }"
                             class="group inline-flex items-center gap-5 self-start rounded-full bg-white px-8 py-5 text-[10px] font-bold uppercase tracking-[0.25em] text-[#E85D75] transition duration-500 hover:-translate-y-1 hover:bg-[#191919] hover:text-white"
                         >
 

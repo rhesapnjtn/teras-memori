@@ -1,4 +1,3 @@
-```vue
 <script setup>
 import { onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
@@ -271,8 +270,7 @@ onMounted(fetchServices)
                         v-for="(service, index) in services"
                         :key="service.id"
                         :to="{
-                            name: 'order',
-                            query: { service: service.id }
+                            name: 'login',
                         }"
                         class="group relative block overflow-hidden border-b border-[#191919]/10 py-10 last:border-b-0 md:py-14"
                     >
@@ -662,7 +660,7 @@ onMounted(fetchServices)
 
 
                         <RouterLink
-                            :to="{ name: 'order' }"
+                            :to="{ name: 'login' }"
                             class="group/button mt-10 inline-flex items-center gap-6 rounded-full bg-white px-8 py-5 text-xs font-semibold uppercase tracking-[0.2em] text-[#191919] transition duration-500 hover:scale-105"
                         >
 
@@ -708,4 +706,3 @@ onMounted(fetchServices)
 
     </div>
 </template>
-```

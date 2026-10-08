@@ -60,6 +60,16 @@ const menuSections = [
             },
         ],
     },
+    {
+        label: 'Access',
+        items: [
+            {
+                name: 'Roles',
+                route: 'dashboard.roles',
+                icon: 'shield',
+            },
+        ],
+    },
 ]
 
 const isActive = (item) => {
@@ -332,6 +342,21 @@ const initials = computed(() => {
                                         d="M20 11.5a7.5 7.5 0 0 1-8 7.5 8.6 8.6 0 0 1-4-.9L4 20l1.2-3.6A7.3 7.3 0 0 1 4.5 12 7.5 7.5 0 1 1 20 11.5Z"
                                     />
                                     <path d="M8 12h.01M12 12h.01M16 12h.01" />
+                                </svg>
+
+
+                                <!-- Shield -->
+                                <svg
+                                    v-else-if="item.icon === 'shield'"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="1.7"
+                                    class="h-5 w-5"
+                                >
+                                    <path
+                                        d="M12 3l7 3v5.5c0 4.4-3 8.3-7 9.5-4-1.2-7-5.1-7-9.5V6l7-3Z"
+                                    />
                                 </svg>
 
                             </span>

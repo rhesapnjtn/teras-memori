@@ -1,10 +1,12 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
+import { useAuthStore } from '../../stores/auth'
 import api from '../../services/api'
 
 const route = useRoute()
 const router = useRouter()
+const auth = useAuthStore()
 
 /*
 |--------------------------------------------------------------------------
@@ -359,6 +361,13 @@ const clearFiles = () => {
 const submitOrder = async () => {
     errorMessage.value = ''
     successMessage.value = ''
+
+    // Check authentication
+    if (!auth.isAuthenticated) {
+        errorMessage.value = 'Silakan login terlebih dahulu untuk membuat order.'
+        router.push({ name: 'login' })
+        return
+    }
 
     /*
     |--------------------------------------------------------------------------

@@ -1,4 +1,3 @@
-```vue
 <script setup>
 import { onMounted, ref } from 'vue'
 import api from '../../services/api'
@@ -220,4 +219,3 @@ onMounted(() => {
         </div>
     </section>
 </template>
-```

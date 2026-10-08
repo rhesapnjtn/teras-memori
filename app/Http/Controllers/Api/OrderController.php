@@ -47,28 +47,19 @@ class OrderController extends Controller
     {
         $validated = $request->validated();
 
-        $order = DB::transaction(function () use ($validated, $request) {
+        // Use authenticated user as customer
+        $user = $request->user();
+        $customerData = array_merge(
+            ['name' => $user->name],
+            $validated['customer']
+        );
 
-            /*
-            |--------------------------------------------------------------------------
-            | CUSTOMER
-            |--------------------------------------------------------------------------
-            */
+        $customer = Customer::updateOrCreate(
+            ['email' => $customerData['email']],
+            $customerData
+        );
 
-            $customerData = $validated['customer'];
-
-            if (! empty($customerData['email'])) {
-
-                $customer = Customer::updateOrCreate(
-                    ['email' => $customerData['email']],
-                    $customerData
-                );
-
-            } else {
-
-                $customer = Customer::create($customerData);
-
-            }
+        $order = DB::transaction(function () use ($validated, $request, $customer) {
 
             /*
             |--------------------------------------------------------------------------
