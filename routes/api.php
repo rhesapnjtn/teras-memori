@@ -281,7 +281,6 @@ Route::middleware('auth:sanctum')->group(function () {
         [AuthController::class, 'user']
     );
 
-<<<<<<< HEAD
     /*
     |--------------------------------------------------------------------------
     | Profile
@@ -291,25 +290,15 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get(
         '/profile',
         [AuthController::class, 'profile']
-=======
-    Route::get(
-        '/profile',
-        [ProfileController::class, 'show']
->>>>>>> main
     );
 
     Route::put(
         '/profile',
-<<<<<<< HEAD
         [AuthController::class, 'updateProfile']
-=======
-        [ProfileController::class, 'update']
->>>>>>> main
     );
 
     Route::post(
         '/profile/avatar',
-<<<<<<< HEAD
         [AuthController::class, 'updateAvatar']
     );
 
@@ -319,11 +308,6 @@ Route::middleware('auth:sanctum')->group(function () {
     |--------------------------------------------------------------------------
     */
 
-=======
-        [ProfileController::class, 'uploadAvatar']
-    );
-
->>>>>>> main
     Route::get(
         '/member',
         [MemberController::class, 'show']
