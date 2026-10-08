@@ -270,7 +270,8 @@ onMounted(fetchServices)
                         v-for="(service, index) in services"
                         :key="service.id"
                         :to="{
-                            name: 'login',
+                            name: 'order',
+                            query: { service: service.id }
                         }"
                         class="group relative block overflow-hidden border-b border-[#191919]/10 py-10 last:border-b-0 md:py-14"
                     >

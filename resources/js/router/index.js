@@ -73,12 +73,34 @@ const routes = [
                 path: 'track-order',
                 name: 'track-order',
                 component: () => import('../pages/public/TrackOrder.vue'),
-},
+            },
+            {
+                path: 'profile',
+                name: 'profile',
+                component: () => import('../pages/public/Profile.vue'),
+                meta: {
+                    requiresAuth: true,
+                },
+            },
+            {
+                path: 'member',
+                name: 'member',
+                component: () => import('../pages/public/Member.vue'),
+                meta: {
+                    requiresAuth: true,
+                },
+            },
+            {
+                path: 'order-history',
+                name: 'order-history',
+                component: () => import('../pages/public/OrderHistory.vue'),
+                meta: {
+                    requiresAuth: true,
+                },
+            },
         ],
-        
-    },
-    
 
+    },
 
     /*
     |--------------------------------------------------------------------------

@@ -7,8 +7,10 @@ use App\Http\Controllers\Api\Admin\ReviewController as AdminReviewController;
 use App\Http\Controllers\Api\Admin\RoleController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ChatController;
+use App\Http\Controllers\Api\MemberController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\PortfolioController;
+use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\ReviewController;
 use App\Http\Controllers\Api\ServiceController;
 use Illuminate\Support\Facades\Route;
@@ -277,6 +279,31 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get(
         '/user',
         [AuthController::class, 'user']
+    );
+
+    Route::get(
+        '/profile',
+        [ProfileController::class, 'show']
+    );
+
+    Route::put(
+        '/profile',
+        [ProfileController::class, 'update']
+    );
+
+    Route::post(
+        '/profile/avatar',
+        [ProfileController::class, 'uploadAvatar']
+    );
+
+    Route::get(
+        '/member',
+        [MemberController::class, 'show']
+    );
+
+    Route::get(
+        '/member/transactions',
+        [MemberController::class, 'transactions']
     );
 });
 
