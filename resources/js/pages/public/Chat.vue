@@ -871,18 +871,15 @@ const sendMessage = async () => {
 
 /*
 |--------------------------------------------------------------------------
-| Enter Handler
+| Keydown Handler
 |--------------------------------------------------------------------------
 */
 
-const handleEnter = (event) => {
-    if (event.shiftKey) {
-        return
+const handleKeydown = (event) => {
+    if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault()
+        sendMessage()
     }
-
-    event.preventDefault()
-
-    sendMessage()
 }
 
 /*
@@ -1422,7 +1419,7 @@ onUnmounted(() => {
                             v-model="message"
                             rows="1"
                             placeholder="Tulis pesan..."
-                            @keydown.enter="handleEnter"
+                            @keydown="handleKeydown"
                             class="max-h-32 min-h-[44px] flex-1 resize-none bg-transparent py-2.5 text-sm outline-none placeholder:text-[#191919]/25"
                         ></textarea>
 
@@ -1444,8 +1441,8 @@ onUnmounted(() => {
                     <p
                         class="mt-3 text-center text-[9px] uppercase tracking-[0.2em] text-[#191919]/20"
                     >
-                        Press Enter to send ·
-                        Shift + Enter for new line
+                        Enter untuk kirim ·
+                        Shift + Enter untuk baris baru
                     </p>
 
                 </div>
