@@ -10,15 +10,12 @@ const auth = useAuthStore()
 const mobileMenuOpen = ref(false)
 const userMenuOpen = ref(false)
 
-<<<<<<< HEAD
 const handleBlur = () => {
     setTimeout(() => {
         userMenuOpen.value = false
     }, 150)
 }
 
-=======
->>>>>>> main
 const logout = async () => {
     userMenuOpen.value = false
     mobileMenuOpen.value = false
@@ -45,13 +42,10 @@ const getAvatarUrl = (avatar) => {
     if (!avatar) return null
     if (avatar.startsWith('http')) return avatar
     return `/storage/${avatar}`
-<<<<<<< HEAD
 }
 
 const closeMobileMenu = () => {
     mobileMenuOpen.value = false
-=======
->>>>>>> main
 }
 </script>
 
@@ -105,36 +99,16 @@ const closeMobileMenu = () => {
                         ></span>
                     </RouterLink>
                 </nav>
-
-                <!-- Desktop user menu / CTA -->
+<!-- Desktop user menu / CTA -->
                 <div class="hidden items-center gap-3 md:flex">
                     <RouterLink
-<<<<<<< HEAD
-                        :to="{ name: 'order' }"
-                        class="group relative inline-flex items-center overflow-hidden rounded-full bg-[#191919] px-6 py-2.5 text-[10px] font-medium uppercase tracking-[0.25em] text-white shadow-sm transition duration-500 hover:bg-[#E85D75] focus:outline-none focus:ring-2 focus:ring-[#E85D75]/40 focus:ring-offset-2 focus:ring-offset-[#FFF8FA]"
-=======
                         v-if="!auth.isAuthenticated"
                         :to="{ name: 'login' }"
                         class="relative inline-flex items-center overflow-hidden rounded-full bg-[#191919] px-6 py-2.5 text-[10px] font-medium uppercase tracking-[0.25em] text-white shadow-sm transition duration-500 hover:bg-[#E85D75]"
->>>>>>> main
                     >
                         <span class="relative z-10">Login</span>
                     </RouterLink>
 
-<<<<<<< HEAD
-                </div>
-
-
-                <!-- =================================================
-                     RIGHT SIDE
-                ================================================== -->
-
-                <div class="flex items-center gap-5">
-
-                    <!-- CTA (guest) -->
-
-=======
->>>>>>> main
                     <RouterLink
                         v-if="!auth.isAuthenticated"
                         :to="{ name: 'order' }"
@@ -144,11 +118,7 @@ const closeMobileMenu = () => {
                         <span class="transition duration-300 group-hover:translate-x-1">→</span>
                     </RouterLink>
 
-<<<<<<< HEAD
-                    <!-- User Menu (authenticated) -->
-
-                    <div v-else class="relative">
-
+                    <div v-if="auth.isAuthenticated" class="relative">
                         <button
                             type="button"
                             @click="userMenuOpen = !userMenuOpen"
@@ -156,13 +126,6 @@ const closeMobileMenu = () => {
                             class="group flex items-center gap-3 rounded-full bg-white py-1.5 pl-1.5 pr-4 text-xs shadow-sm ring-1 ring-[#191919]/10 hover:ring-[#E85D75]"
                         >
 
-=======
-                    <div v-if="auth.isAuthenticated" class="relative">
-                        <button
-                            @click="userMenuOpen = !userMenuOpen"
-                            class="flex items-center gap-2 rounded-full bg-white py-1.5 pl-1.5 pr-4 text-xs shadow-sm ring-1 ring-gray-200 hover:ring-[#E85D75]"
-                        >
->>>>>>> main
                             <img
                                 v-if="getAvatarUrl(auth.user?.avatar)"
                                 :src="getAvatarUrl(auth.user?.avatar)"
@@ -171,7 +134,6 @@ const closeMobileMenu = () => {
                             <div v-else class="flex h-7 w-7 items-center justify-center rounded-full bg-[#E85D75] text-[10px] font-bold text-white">
                                 {{ (auth.user?.name || 'U').charAt(0).toUpperCase() }}
                             </div>
-<<<<<<< HEAD
 
                             <span class="font-medium">{{ auth.user?.name || 'Profil' }}</span>
 
@@ -232,50 +194,6 @@ const closeMobileMenu = () => {
 
                         </Transition>
 
-                    </div>
-
-
-                    <!-- Mobile menu button -->
-
-                    <button
-                        type="button"
-                        @click="mobileMenuOpen = !mobileMenuOpen"
-                        class="flex h-10 w-10 items-center justify-center rounded-full border border-[#191919]/10 transition duration-300 hover:border-[#E85D75] md:hidden"
-                        aria-label="Toggle navigation"
-                        :aria-expanded="mobileMenuOpen"
-                    >
-
-                        <div class="flex w-4 flex-col gap-1.5">
-
-                            <span
-                                class="h-px w-full bg-[#191919] transition duration-300"
-                                :class="
-                                    mobileMenuOpen
-                                        ? 'translate-y-[4px] rotate-45'
-                                        : ''
-                                "
-                            ></span>
-
-
-                            <span
-                                class="h-px w-full bg-[#191919] transition duration-300"
-                                :class="
-                                    mobileMenuOpen
-                                        ? '-rotate-45'
-                                        : ''
-                                "
-                            ></span>
-
-=======
-                            <span class="font-medium">{{ auth.user?.name || 'Profil' }}</span>
-                        </button>
-                        <div v-if="userMenuOpen" class="absolute right-0 mt-2 flex w-48 flex-col rounded-lg bg-white py-1 shadow-lg ring-1 ring-gray-200">
-                            <RouterLink :to="{ name: 'profile' }" class="px-4 py-2 text-sm hover:bg-gray-50">Profil Saya</RouterLink>
-                            <RouterLink :to="{ name: 'member' }" class="px-4 py-2 text-sm hover:bg-gray-50">Member Saya</RouterLink>
-                            <RouterLink :to="{ name: 'order-history' }" class="px-4 py-2 text-sm hover:bg-gray-50">Riwayat Pesanan</RouterLink>
-                            <button @click="logout()" class="px-4 py-2 text-left text-sm text-red-600 hover:bg-gray-50">Logout</button>
->>>>>>> main
-                        </div>
                     </div>
                 </div>
             </div>
@@ -439,8 +357,6 @@ const closeMobileMenu = () => {
 
             </Transition>
 
-=======
->>>>>>> main
         </header>
 
         <!-- =====================================================
@@ -602,10 +518,9 @@ const closeMobileMenu = () => {
              PAGE CONTENT
         ====================================================== -->
 
-        <main>
+<main>
             <RouterView />
         </main>
-<<<<<<< HEAD
 
 
         <!-- =====================================================
@@ -753,17 +668,17 @@ const closeMobileMenu = () => {
                             </RouterLink>
 
 
-<RouterLink
-                            :to="{ name: 'order' }"
-                            class="flex w-fit items-center gap-3 text-[9px] uppercase tracking-[0.25em] text-[#191919]/45 transition duration-300 hover:gap-5 hover:text-[#E85D75]"
-                        >
-                            Start a project
+                            <RouterLink
+                                :to="{ name: 'order' }"
+                                class="flex w-fit items-center gap-3 text-[9px] uppercase tracking-[0.25em] text-[#191919]/45 transition duration-300 hover:gap-5 hover:text-[#E85D75]"
+                            >
+                                Start a project
 
-                            <span>
-                                →
-                            </span>
+                                <span>
+                                    →
+                                </span>
 
-                        </RouterLink>
+                            </RouterLink>
 
                         </div>
 
@@ -800,7 +715,5 @@ const closeMobileMenu = () => {
 
         </footer>
 
-=======
->>>>>>> main
     </div>
 </template>

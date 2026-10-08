@@ -73,11 +73,7 @@ const routes = [
                 path: 'track-order',
                 name: 'track-order',
                 component: () => import('../pages/public/TrackOrder.vue'),
-<<<<<<< HEAD
-},
-=======
             },
->>>>>>> main
             {
                 path: 'profile',
                 name: 'profile',
