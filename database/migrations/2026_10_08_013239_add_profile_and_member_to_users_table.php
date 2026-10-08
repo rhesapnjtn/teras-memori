@@ -36,3 +36,4 @@ class AddProfileAndMemberToUsersTable extends Migration
         });
     }
 }
+}
