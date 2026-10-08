@@ -35,4 +35,8 @@ return new class extends Migration
             ]);
         });
     }
+<<<<<<< HEAD
 };
+=======
+};
+>>>>>>> main

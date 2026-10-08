@@ -26,4 +26,8 @@ return new class extends Migration
     {
         Schema::dropIfExists('point_transactions');
     }
+<<<<<<< HEAD
 };
+=======
+};
+>>>>>>> main
