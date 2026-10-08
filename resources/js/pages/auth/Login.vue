@@ -1,9 +1,10 @@
 <script setup>
 import { reactive, ref } from 'vue'
-import { RouterLink, useRouter } from 'vue-router'
+import { RouterLink, useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '../../stores/auth'
 
 const router = useRouter()
+const route = useRoute()
 const auth = useAuthStore()
 
 const form = reactive({
@@ -23,13 +24,13 @@ const submit = async () => {
             (r) => r.name
         ) || []
 
-        if (
-            roles.includes('admin') ||
-            roles.includes('superadmin')
-        ) {
+        const isAdmin = roles.includes('admin') || roles.includes('superadmin')
+        const redirect = route.query.redirect
+
+        if (isAdmin) {
             router.push({ name: 'dashboard' })
         } else {
-            router.push({ name: 'home' })
+            router.push(redirect || { name: 'home' })
         }
     } catch (error) {
         errorMessage.value =

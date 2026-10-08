@@ -102,6 +102,8 @@ class OrderController extends Controller
                 );
             }
 
+            $previousPaymentStatus = $payment->status;
+
             $payment->update([
                 'status' => $data['status'],
 
@@ -209,10 +211,10 @@ class OrderController extends Controller
 
             /*
             |--------------------------------------------------------------------------
-            | Jika payment bukan PAID
-            | paid_at dikosongkan oleh logic di atas.
+            | HANDLE POINT TRANSACTIONS
             |--------------------------------------------------------------------------
             */
+            $this->handlePointTransaction($order, $payment, $previousPaymentStatus, $data['status']);
         });
 
         $order->load([
@@ -223,5 +225,95 @@ class OrderController extends Controller
         ]);
 
         return new OrderResource($order);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | HANDLE POINT TRANSACTIONS
+    |--------------------------------------------------------------------------
+    | - Earn points when payment becomes PAID
+    | - Refund points when payment becomes FAILED/EXPIRED/REFUNDED (from PAID)
+    |--------------------------------------------------------------------------
+    */
+
+    private function handlePointTransaction(
+        Order $order,
+        $payment,
+        string $previousStatus,
+        string $newStatus
+    ): void {
+        // Get the user (customer) from the order
+        $user = $order->customer?->user;
+
+        if (! $user) {
+            return;
+        }
+
+        // Calculate base points: 1 point per Rp 10,000
+        $basePoints = (int) floor($order->total_amount / 10000);
+
+        if ($basePoints <= 0) {
+            return;
+        }
+
+        // Apply tier multiplier
+        $multiplier = match ($user->member_tier) {
+            'bronze' => 1.0,
+            'silver' => 1.2,
+            'gold' => 1.5,
+            'platinum' => 2.0,
+            default => 1.0,
+        };
+
+        $earnedPoints = (int) floor($basePoints * $multiplier);
+
+        // PAID from non-PAID status -> EARN points
+        if (
+            $newStatus === 'paid' &&
+            $previousStatus !== 'paid'
+        ) {
+            $user->increment('points', $earnedPoints);
+
+            // Auto-enable member if points > 0
+            if (! $user->is_member) {
+                $user->update([
+                    'is_member' => true,
+                    'member_joined_at' => $user->member_joined_at ?? now(),
+                ]);
+            }
+
+            PointTransaction::create([
+                'user_id' => $user->id,
+                'order_id' => $order->id,
+                'payment_id' => $payment->id,
+                'points' => $earnedPoints,
+                'type' => 'earn',
+                'description' => "Poin dari pembayaran order {$order->order_number}",
+            ]);
+        }
+
+        // PAID -> FAILED/EXPIRED/REFUNDED -> REFUND points
+        if (
+            $previousStatus === 'paid' &&
+            in_array($newStatus, ['failed', 'expired', 'refunded'])
+        ) {
+            // Find existing earn transaction for this payment
+            $earnTransaction = PointTransaction::where('payment_id', $payment->id)
+                ->where('type', 'earn')
+                ->first();
+
+            if ($earnTransaction) {
+                $user->decrement('points', $earnTransaction->points);
+
+                PointTransaction::create([
+                    'user_id' => $user->id,
+                    'order_id' => $order->id,
+                    'payment_id' => $payment->id,
+                    'points' => -$earnTransaction->points,
+                    'type' => 'refund',
+                    'description' => "Pembatalan poin dari order {$order->order_number} (payment: {$newStatus})",
+                ]);
+            }
+        }
     }
 }

@@ -661,7 +661,7 @@ onMounted(fetchServices)
 
 
                         <RouterLink
-                            :to="{ name: 'login' }"
+                            :to="{ name: 'order' }"
                             class="group/button mt-10 inline-flex items-center gap-6 rounded-full bg-white px-8 py-5 text-xs font-semibold uppercase tracking-[0.2em] text-[#191919] transition duration-500 hover:scale-105"
                         >
 

@@ -276,7 +276,8 @@ router.beforeEach((to) => {
 
     if (
         (to.name === 'login' || to.name === 'register') &&
-        auth.isAuthenticated
+        auth.isAuthenticated &&
+        !to.query.redirect
     ) {
         const roles = auth.user?.roles?.map(
             (r) => r.name

@@ -10,7 +10,6 @@ use App\Http\Controllers\Api\ChatController;
 use App\Http\Controllers\Api\MemberController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\PortfolioController;
-use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\ReviewController;
 use App\Http\Controllers\Api\ServiceController;
 use Illuminate\Support\Facades\Route;
@@ -281,20 +280,32 @@ Route::middleware('auth:sanctum')->group(function () {
         [AuthController::class, 'user']
     );
 
+    /*
+    |--------------------------------------------------------------------------
+    | Profile
+    |--------------------------------------------------------------------------
+    */
+
     Route::get(
         '/profile',
-        [ProfileController::class, 'show']
+        [AuthController::class, 'profile']
     );
 
     Route::put(
         '/profile',
-        [ProfileController::class, 'update']
+        [AuthController::class, 'updateProfile']
     );
 
     Route::post(
         '/profile/avatar',
-        [ProfileController::class, 'uploadAvatar']
+        [AuthController::class, 'updateAvatar']
     );
+
+    /*
+    |--------------------------------------------------------------------------
+    | Member
+    |--------------------------------------------------------------------------
+    */
 
     Route::get(
         '/member',
