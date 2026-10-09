@@ -455,15 +455,27 @@ const loadChatByCredentials = async () => {
 
         /*
         |--------------------------------------------------------------------------
+        | Customer belum memiliki percakapan
+        |--------------------------------------------------------------------------
+        |
+        | Kembalikan false supaya startChat() melanjutkan ke createChat().
+        | Jangan set started = true karena chat belum benar-benar ada.
+        |
+        */
+
+        if (! chat.value) {
+            return false
+        }
+
+        /*
+        |--------------------------------------------------------------------------
         | Save chat data
         |--------------------------------------------------------------------------
         */
 
-        if (chat.value) {
-            saveChatData(
-                chat.value
-            )
-        }
+        saveChatData(
+            chat.value
+        )
 
         /*
         |--------------------------------------------------------------------------
@@ -487,10 +499,7 @@ const loadChatByCredentials = async () => {
         |--------------------------------------------------------------------------
         */
 
-        if (
-            chat.value &&
-            chatToken.value
-        ) {
+        if (chatToken.value) {
             subscribeToChat(
                 chatToken.value
             )
@@ -799,71 +808,34 @@ const sendMessage = async () => {
     }
 
     if (!chatToken.value) {
-        errorMessage.value =
-            'Chat token tidak ditemukan.'
-
+        errorMessage.value = 'Chat token tidak ditemukan.'
         return
     }
 
     sending.value = true
     errorMessage.value = ''
 
-    const text =
-        message.value.trim()
+    const text = message.value.trim()
 
     try {
-        const response =
-            await api.post(
-                `/chats/${chat.value.id}/messages`,
-                {
-                    message: text,
-                },
-                {
-                    headers: {
-                        'X-Chat-Token':
-                            chatToken.value,
-                    },
-                }
-            )
-
-        chat.value =
-            response.data.data
-
-        /*
-        |--------------------------------------------------------------------------
-        | Save Chat Data
-        |--------------------------------------------------------------------------
-        */
-
-        saveChatData(
-            chat.value
+        const response = await api.post(
+            `/chats/${chat.value.id}/messages`,
+            { message: text },
+            { headers: { 'X-Chat-Token': chatToken.value } }
         )
 
-        /*
-        |--------------------------------------------------------------------------
-        | Pastikan realtime tetap aktif
-        |--------------------------------------------------------------------------
-        */
+        chat.value = response.data.data
+        saveChatData(chat.value)
 
         if (chatToken.value) {
-            subscribeToChat(
-                chatToken.value
-            )
+            subscribeToChat(chatToken.value)
         }
 
         message.value = ''
-
         await scrollToBottom()
     } catch (error) {
-        console.error(
-            'Send message error:',
-            error
-        )
-
-        errorMessage.value =
-            error.response?.data
-                ?.message ||
-            'Gagal mengirim pesan.'
+        console.error('Send message error:', error)
+        errorMessage.value = error.response?.data?.message || 'Gagal mengirim pesan.'
     } finally {
         sending.value = false
     }

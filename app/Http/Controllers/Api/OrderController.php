@@ -21,18 +21,39 @@ class OrderController extends Controller
     |--------------------------------------------------------------------------
     */
 
-    public function index(): AnonymousResourceCollection
+    public function index(Request $request): AnonymousResourceCollection
     {
-        $orders = Order::query()
+        $user = $request->user();
+
+        $query = Order::query()
             ->with([
                 'customer',
                 'items.service',
                 'payment',
                 'files',
                 'review',
-            ])
-            ->latest()
-            ->get();
+            ]);
+
+        /*
+        |--------------------------------------------------------------------------
+        | ORDER OWNERSHIP
+        |--------------------------------------------------------------------------
+        |
+        | Admin dapat melihat seluruh order.
+        | Customer hanya dapat melihat order miliknya sendiri.
+        |
+        */
+
+        if (! $user->hasAnyRole(['admin', 'superadmin'])) {
+            $query->whereHas('customer', function ($customerQuery) use ($user) {
+                $customerQuery->whereRaw(
+                    'LOWER(email) = ?',
+                    [strtolower(trim($user->email))]
+                );
+            });
+        }
+
+        $orders = $query->latest()->get();
 
         return OrderResource::collection($orders);
     }
@@ -299,6 +320,37 @@ class OrderController extends Controller
 
     public function show(Order $order): OrderResource
     {
+        $this->authorize('view', $order);
+
+        $order->load([
+            'customer',
+            'items.service',
+            'payment',
+            'files',
+            'review',
+        ]);
+
+        return new OrderResource($order);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | CANCEL
+    |--------------------------------------------------------------------------
+    |
+    | Customer dapat membatalkan order miliknya sendiri selama
+    | masih berstatus pending. Admin juga diizinkan melalui policy.
+    |
+    */
+
+    public function cancel(Order $order): OrderResource
+    {
+        $this->authorize('cancel', $order);
+
+        $order->update([
+            'status' => 'cancelled',
+        ]);
+
         $order->load([
             'customer',
             'items.service',

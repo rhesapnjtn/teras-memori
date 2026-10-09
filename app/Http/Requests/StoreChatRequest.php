@@ -19,6 +19,12 @@ class StoreChatRequest extends FormRequest
                 'email',
                 'max:255',
             ],
+
+            'order_number' => [
+                'required',
+                'string',
+                'max:100',
+            ],
         ];
     }
 
@@ -30,6 +36,10 @@ class StoreChatRequest extends FormRequest
             'email.email' => 'Format email tidak valid.',
 
             'email.max' => 'Email maksimal 255 karakter.',
+
+            'order_number.required' => 'Nomor order wajib diisi.',
+
+            'order_number.max' => 'Nomor order maksimal 100 karakter.',
         ];
     }
 }

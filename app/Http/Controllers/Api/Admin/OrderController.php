@@ -121,92 +121,17 @@ class OrderController extends Controller
             /*
             |--------------------------------------------------------------------------
             | Jika payment menjadi PAID
-            | otomatis ubah order pending → confirmed & award points
+            | otomatis ubah order pending → confirmed
             |--------------------------------------------------------------------------
             */
 
-            $wasJustPaid = ($data['status'] === 'paid');
-
             if (
-                $wasJustPaid &&
+                $data['status'] === 'paid' &&
                 $order->status === 'pending'
             ) {
                 $order->update([
                     'status' => 'confirmed',
                 ]);
-            }
-
-            // Award points if just paid and not awarded before
-            if ($wasJustPaid && $payment) {
-                $alreadyAwarded = PointTransaction::where('order_id', $order->id)
-                    ->where('payment_id', $payment->id)
-                    ->where('type', 'earn')
-                    ->exists();
-
-                if (! $alreadyAwarded) {
-                    $customer = $order->customer;
-                    $user = null;
-
-                    if ($customer) {
-                        $user = User::where('email', strtolower(trim($customer->email)))->first();
-                    }
-
-                    if ($user) {
-                        $totalAmount = (float) ($order->total_amount ?? $payment->amount ?? 0);
-                        $basePoints = (int) floor($totalAmount / 10000);
-
-                        if ($basePoints < 0) {
-                            $basePoints = 0;
-                        }
-
-                        $multiplier = match ($user->member_tier) {
-                            'silver' => 1.2,
-                            'gold' => 1.5,
-                            'platinum' => 2.0,
-                            default => 1.0,
-                        };
-
-                        $earnedPoints = (int) floor($basePoints * $multiplier);
-                        if ($earnedPoints === 0 && $totalAmount > 0) {
-                            $earnedPoints = 1;
-                        }
-
-                        if ($earnedPoints !== 0) {
-                            DB::transaction(function () use ($user, $order, $payment, $earnedPoints, $totalAmount) {
-                                PointTransaction::create([
-                                    'user_id' => $user->id,
-                                    'order_id' => $order->id,
-                                    'payment_id' => $payment->id,
-                                    'points' => $earnedPoints,
-                                    'type' => 'earn',
-                                    'description' => sprintf('Earned points for order %s (Rp %s)', $order->order_number, number_format($totalAmount, 0, ',', '.')),
-                                ]);
-
-                                $newPoints = $user->points + $earnedPoints;
-                                $user->points = $newPoints;
-
-                                if (! $user->is_member) {
-                                    $user->is_member = true;
-                                    if (! $user->member_joined_at) {
-                                        $user->member_joined_at = now();
-                                    }
-                                }
-
-                                if ($newPoints >= 10000) {
-                                    $user->member_tier = 'platinum';
-                                } elseif ($newPoints >= 5000) {
-                                    $user->member_tier = 'gold';
-                                } elseif ($newPoints >= 1000) {
-                                    $user->member_tier = 'silver';
-                                } else {
-                                    $user->member_tier = 'bronze';
-                                }
-
-                                $user->save();
-                            });
-                        }
-                    }
-                }
             }
 
             /*
@@ -242,68 +167,71 @@ class OrderController extends Controller
         string $previousStatus,
         string $newStatus
     ): void {
-        // Get the user (customer) from the order
         $user = $order->customer?->user;
 
         if (! $user) {
             return;
         }
 
-        // Calculate base points: 1 point per Rp 10,000
-        $basePoints = (int) floor($order->total_amount / 10000);
+        /*
+        |--------------------------------------------------------------------------
+        | PAID dari status non-PAID -> tambah poin
+        |--------------------------------------------------------------------------
+        */
 
-        if ($basePoints <= 0) {
-            return;
-        }
+        if ($newStatus === 'paid' && $previousStatus !== 'paid') {
+            $alreadyAwarded = PointTransaction::where('order_id', $order->id)
+                ->where('payment_id', $payment->id)
+                ->where('type', 'earn')
+                ->exists();
 
-        // Apply tier multiplier
-        $multiplier = match ($user->member_tier) {
-            'bronze' => 1.0,
-            'silver' => 1.2,
-            'gold' => 1.5,
-            'platinum' => 2.0,
-            default => 1.0,
-        };
+            if (! $alreadyAwarded) {
+                $earnedPoints = $this->calculateEarnedPoints($order, $user);
 
-        $earnedPoints = (int) floor($basePoints * $multiplier);
+                if ($earnedPoints > 0) {
+                    $user->increment('points', $earnedPoints);
+                    $user->refresh();
 
-        // PAID from non-PAID status -> EARN points
-        if (
-            $newStatus === 'paid' &&
-            $previousStatus !== 'paid'
-        ) {
-            $user->increment('points', $earnedPoints);
+                    if (! $user->is_member) {
+                        $user->is_member = true;
+                        $user->member_joined_at = $user->member_joined_at ?? now();
+                    }
 
-            // Auto-enable member if points > 0
-            if (! $user->is_member) {
-                $user->update([
-                    'is_member' => true,
-                    'member_joined_at' => $user->member_joined_at ?? now(),
-                ]);
+                    $user->recalculateMemberTier();
+                    $user->save();
+
+                    PointTransaction::create([
+                        'user_id' => $user->id,
+                        'order_id' => $order->id,
+                        'payment_id' => $payment->id,
+                        'points' => $earnedPoints,
+                        'type' => 'earn',
+                        'description' => "Poin dari pembayaran order {$order->order_number}",
+                    ]);
+                }
             }
-
-            PointTransaction::create([
-                'user_id' => $user->id,
-                'order_id' => $order->id,
-                'payment_id' => $payment->id,
-                'points' => $earnedPoints,
-                'type' => 'earn',
-                'description' => "Poin dari pembayaran order {$order->order_number}",
-            ]);
         }
 
-        // PAID -> FAILED/EXPIRED/REFUNDED -> REFUND points
+        /*
+        |--------------------------------------------------------------------------
+        | PAID -> FAILED/EXPIRED/REFUNDED -> tarik kembali poin
+        |--------------------------------------------------------------------------
+        */
+
         if (
             $previousStatus === 'paid' &&
-            in_array($newStatus, ['failed', 'expired', 'refunded'])
+            in_array($newStatus, ['failed', 'expired', 'refunded'], true)
         ) {
-            // Find existing earn transaction for this payment
             $earnTransaction = PointTransaction::where('payment_id', $payment->id)
                 ->where('type', 'earn')
                 ->first();
 
             if ($earnTransaction) {
                 $user->decrement('points', $earnTransaction->points);
+                $user->refresh();
+
+                $user->recalculateMemberTier();
+                $user->save();
 
                 PointTransaction::create([
                     'user_id' => $user->id,
@@ -315,5 +243,35 @@ class OrderController extends Controller
                 ]);
             }
         }
+    }
+
+    /**
+     * Hitung poin yang diperoleh dari sebuah order,
+     * memperhitungkan tier multiplier user.
+     */
+    private function calculateEarnedPoints(Order $order, User $user): int
+    {
+        $totalAmount = (float) ($order->total_amount ?? 0);
+
+        $basePoints = (int) floor($totalAmount / 10000);
+
+        if ($basePoints < 0) {
+            $basePoints = 0;
+        }
+
+        $multiplier = match ($user->member_tier) {
+            'silver' => 1.2,
+            'gold' => 1.5,
+            'platinum' => 2.0,
+            default => 1.0,
+        };
+
+        $earnedPoints = (int) floor($basePoints * $multiplier);
+
+        if ($earnedPoints === 0 && $totalAmount > 0) {
+            $earnedPoints = 1;
+        }
+
+        return $earnedPoints;
     }
 }

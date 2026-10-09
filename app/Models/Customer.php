@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Customer extends Model
 {
@@ -27,5 +28,13 @@ class Customer extends Model
     public function chats(): HasMany
     {
         return $this->hasMany(Chat::class);
+    }
+
+    /**
+     * Akun user yang terhubung dengan customer ini (dicocokkan via email).
+     */
+    public function user(): HasOne
+    {
+        return $this->hasOne(User::class, 'email', 'email');
     }
 }

@@ -112,8 +112,8 @@ const fetchDashboard = async () => {
             reviewsResponse,
         ] = await Promise.all([
             api.get('/orders'),
-            api.get('/customers'),
-            api.get('/reviews'),
+            api.get('/admin/customers'),
+            api.get('/admin/reviews'),
         ])
 
         const orders = ordersResponse.data?.data || []

@@ -50,6 +50,22 @@ class User extends Authenticatable
         return $this->hasMany(PointTransaction::class);
     }
 
+    /**
+     * Sinkronkan tier member berdasarkan total poin saat ini.
+     * Tidak menyimpan otomatis; pemanggil yang menentukan kapan save().
+     */
+    public function recalculateMemberTier(): void
+    {
+        $points = (int) $this->points;
+
+        $this->member_tier = match (true) {
+            $points >= 10000 => 'platinum',
+            $points >= 5000 => 'gold',
+            $points >= 1000 => 'silver',
+            default => 'bronze',
+        };
+    }
+
     public function getNextTierAttribute(): string
     {
         return match ($this->member_tier) {

@@ -105,4 +105,60 @@ class ProfileMemberTest extends TestCase
             'type' => 'earn',
         ]);
     }
+
+    public function test_points_refunded_when_payment_refunded(): void
+    {
+        $service = Service::factory()->create(['is_active' => true, 'price' => 100000]);
+        $buyer = User::factory()->create(['email' => 'buyerrefund@test.com']);
+        $buyer->assignRole('customer');
+        $admin = User::factory()->create(['email' => 'adminrefund@test.com']);
+        $admin->assignRole('admin');
+
+        $orderResponse = $this->actingAs($buyer, 'sanctum')
+            ->postJson('/api/orders', [
+                'customer' => [
+                    'name' => $buyer->name,
+                    'email' => $buyer->email,
+                    'phone' => '081234567890',
+                ],
+                'items' => [
+                    [
+                        'service_id' => $service->id,
+                        'quantity' => 1,
+                    ],
+                ],
+            ]);
+
+        $orderResponse->assertStatus(201);
+        $orderId = $orderResponse->json('data.id');
+
+        // Payment becomes paid -> points awarded
+        $this->actingAs($admin, 'sanctum')
+            ->patchJson("/api/admin/orders/{$orderId}/payment", [
+                'status' => 'paid',
+                'method' => 'bank_transfer',
+            ])
+            ->assertStatus(200);
+
+        $buyer->refresh();
+        $earnedPoints = $buyer->points;
+        $this->assertGreaterThan(0, $earnedPoints);
+
+        // Payment refunded -> points pulled back
+        $this->actingAs($admin, 'sanctum')
+            ->patchJson("/api/admin/orders/{$orderId}/payment", [
+                'status' => 'refunded',
+            ])
+            ->assertStatus(200);
+
+        $buyer->refresh();
+        $this->assertEquals(0, $buyer->points);
+
+        $this->assertDatabaseHas('point_transactions', [
+            'user_id' => $buyer->id,
+            'order_id' => $orderId,
+            'type' => 'refund',
+            'points' => -$earnedPoints,
+        ]);
+    }
 }

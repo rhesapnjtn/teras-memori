@@ -8,6 +8,37 @@ const auth = useAuthStore()
 const orders = ref([])
 const loading = ref(true)
 const errorMessage = ref('')
+const cancellingId = ref(null)
+
+const cancelOrder = async (order) => {
+    if (!order || order.status !== 'pending') return
+    if (!window.confirm('Batalkan pesanan ini?')) return
+
+    cancellingId.value = order.id
+    errorMessage.value = ''
+
+    try {
+        const response = await api.patch(
+            `/orders/${order.id}/cancel`
+        )
+
+        const updated = response.data.data || response.data
+
+        const index = orders.value.findIndex(
+            (item) => item.id === order.id
+        )
+
+        if (index !== -1) {
+            orders.value[index] = updated
+        }
+    } catch (error) {
+        errorMessage.value =
+            error.response?.data?.message ||
+            'Gagal membatalkan pesanan'
+    } finally {
+        cancellingId.value = null
+    }
+}
 
 const fetchOrders = async () => {
     loading.value = true
@@ -155,6 +186,15 @@ onMounted(async () => {
                                 <p class="font-semibold text-[#191919]">{{ formatCurrency(order.total_amount) }}</p>
                                 <p class="text-xs text-gray-500">Total</p>
                             </div>
+                            <button
+                                v-if="order.status === 'pending'"
+                                type="button"
+                                @click.prevent.stop="cancelOrder(order)"
+                                :disabled="cancellingId === order.id"
+                                class="rounded-full border border-[#E85D75]/40 px-4 py-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-[#E85D75] transition hover:bg-[#E85D75] hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
+                            >
+                                {{ cancellingId === order.id ? '...' : 'Batalkan' }}
+                            </button>
                             <span class="text-lg text-gray-300 group-hover:text-[#E85D75] transition-colors">→</span>
                         </div>
                     </div>
