@@ -1,11 +1,9 @@
 <script setup>
 import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { useAuthStore } from '../stores/auth'
 
 const router = useRouter()
 const route = useRoute()
-const auth = useAuthStore()
 
 const isOpen = ref(false)
 const isVisible = ref(false)
@@ -20,20 +18,24 @@ const shouldShowWidget = () => {
 }
 
 const checkExistingChat = async () => {
-  if (!auth.isAuthenticated) return
-  
   try {
-    const response = await fetch('/api/chats/customer', {
+    // For guest users: check localStorage for saved chat
+    const chatId = localStorage.getItem('chat_id')
+    const chatToken = localStorage.getItem('chat_public_token')
+    
+    if (!chatId || !chatToken) return
+    
+    const response = await fetch(`/api/chats/${chatId}`, {
       headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`,
         'Accept': 'application/json',
+        'X-Chat-Token': chatToken,
       },
     })
     
     if (response.ok) {
       const data = await response.json()
-      if (data.data?.id) {
-        unreadCount.value = data.data.messages?.filter(m => m.sender_type === 'admin' && !m.read_at).length || 0
+      if (data.data?.messages) {
+        unreadCount.value = data.data.messages.filter(m => m.sender_type === 'admin' && !m.read_at).length || 0
       }
     }
   } catch (error) {
@@ -42,11 +44,7 @@ const checkExistingChat = async () => {
 }
 
 const openChat = () => {
-  if (auth.isAuthenticated) {
-    router.push({ name: 'chat' })
-  } else {
-    router.push({ name: 'login', query: { redirect: 'chat' } })
-  }
+  router.push({ name: 'chat' })
   isOpen.value = false
 }
 
@@ -66,13 +64,7 @@ onMounted(() => {
     checkExistingChat()
     handlePulse()
     
-    const handleStorageChange = () => {
-      checkExistingChat()
-    }
-    window.addEventListener('storage', handleStorageChange)
-    
     return () => {
-      window.removeEventListener('storage', handleStorageChange)
       if (pulseTimeout) clearTimeout(pulseTimeout)
     }
   }

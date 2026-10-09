@@ -93,7 +93,7 @@ Route::post(
 Route::get(
     '/orders',
     [OrderController::class, 'index']
-);
+)->middleware('auth:sanctum');
 
 /*
 |--------------------------------------------------------------------------
@@ -104,7 +104,22 @@ Route::get(
 Route::get(
     '/orders/{order}',
     [OrderController::class, 'show']
-);
+)->middleware('auth:sanctum');
+
+/*
+|--------------------------------------------------------------------------
+| Cancel Order
+|--------------------------------------------------------------------------
+|
+| Customer dapat membatalkan order miliknya sendiri
+| selama masih berstatus pending.
+|
+*/
+
+Route::patch(
+    '/orders/{order}/cancel',
+    [OrderController::class, 'cancel']
+)->middleware('auth:sanctum');
 
 /*
 |--------------------------------------------------------------------------
